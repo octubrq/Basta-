@@ -1,0 +1,14 @@
+{
+  "name": "basta-game",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm run build",
+    "start": "cd server && node index.js",
+    "postinstall": "npm run install:all && npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

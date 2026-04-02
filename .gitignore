@@ -1,0 +1,5 @@
+node_modules/
+server/basta.db
+client/build/
+.env
+*.tar.gz
