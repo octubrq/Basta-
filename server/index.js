@@ -1,8 +1,12 @@
+const path = require('path');
+// Carga server/.env en local (dev). En Railway no existe el archivo y usa las
+// variables de entorno reales, así que el try/catch lo ignora sin romper nada.
+try { process.loadEnvFile(path.join(__dirname, '.env')); } catch {}
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const path = require('path');
 const auth = require('./auth');
 const G = require('./rooms');
 
@@ -28,7 +32,9 @@ app.post('/api/player/join', (req, res) => {
 app.get('/api/status', (req, res) => { res.json({ active: G.game.active }); });
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, '../client/build/index.html')); });
 
-const io = new Server(server, { cors: { origin: '*' }, pingTimeout: 60000, pingInterval: 25000 });
+// pingTimeout alto: cuando un móvil bloquea la pantalla deja de responder a los
+// pings; con 120s el socket sobrevive al bloqueo y el jugador no cae de la partida.
+const io = new Server(server, { cors: { origin: '*' }, pingTimeout: 120000, pingInterval: 20000 });
 
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -57,6 +63,8 @@ io.on('connection', (socket) => {
       session: G.game.session.state,
       sessionType: G.game.session.type,
       roundData: G.game.session.roundData,
+      standings: G.getStandings(),
+      lastResult: G.game.session.roundHistory[G.game.session.roundHistory.length - 1] || null,
       scrambleData: G.game.session.scrambleCurrentWord ? {
         scrambled: G.game.session.scrambleScrambled,
         wordNumber: G.game.session.scrambleIndex,
@@ -243,7 +251,7 @@ server.listen(PORT, '0.0.0.0', () => {
   ║            ¡BASTA! Game Server v2        ║
   ║                                          ║
   ║   🎮 http://localhost:${PORT}               ║
-  ║   🤖 AI: ${process.env.ANTHROPIC_API_KEY ? 'Claude Sonnet ✅' : '❌ Set ANTHROPIC_API_KEY'}
+  ║   🤖 AI: ${process.env.ANTHROPIC_API_KEY ? (process.env.CLAUDE_MODEL || 'claude-haiku-4-5') + ' ✅' : '❌ Set ANTHROPIC_API_KEY'}
   ║   👑 Admin: register at /api/admin/register
   ╚══════════════════════════════════════════╝
   `);

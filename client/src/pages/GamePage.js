@@ -2,6 +2,21 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 
+// Borrador de respuestas en localStorage: si el móvil se bloquea o se recarga,
+// al volver se recupera lo escrito a medias. Firmado por ronda para no arrastrar
+// borradores viejos de rondas/partidas anteriores.
+const DRAFT_KEY = 'basta_draft';
+const draftSig = (rd) => `${rd.round}|${rd.letter}|${(rd.categories || []).join(',')}`;
+function loadDraft(rd) {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    return d && d.sig === draftSig(rd) ? (d.answers || null) : null;
+  } catch { return null; }
+}
+function saveDraft(rd, answers) {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ sig: draftSig(rd), answers })); } catch { /* noop */ }
+}
+
 export default function GamePage() {
   const { user } = useAuth();
   const { roundData, phase, bastaInfo, graceLeft, fixedLeft, scoreboard, forceSubmit, pressBasta, submitAnswers, gameState } = useGame();
@@ -10,15 +25,30 @@ export default function GamePage() {
   const [showBoard, setShowBoard] = useState(false);
   const inputRefs = useRef({});
   const answersRef = useRef({});
+  const initedSigRef = useRef(null);
 
   useEffect(() => { answersRef.current = answers; }, [answers]);
+
+  // Inicializa las respuestas una sola vez por ronda. En arranque normal empieza
+  // vacío; tras reconectar (componente remontado) restaura el borrador guardado.
   useEffect(() => {
-    if (phase === 'playing' && roundData) {
-      const e = {}; roundData.categories.forEach(c => { e[c] = ''; });
-      setAnswers(e); answersRef.current = e; setSubmitted(false);
-      setTimeout(() => inputRefs.current[roundData.categories[0]]?.focus(), 800);
-    }
+    if (!roundData) return;
+    if (!['playing', 'grace', 'collecting', 'validating'].includes(phase)) return;
+    const sig = draftSig(roundData);
+    if (initedSigRef.current === sig) return;
+    initedSigRef.current = sig;
+    const saved = loadDraft(roundData);
+    const e = {}; roundData.categories.forEach(c => { e[c] = saved?.[c] || ''; });
+    setAnswers(e); answersRef.current = e; setSubmitted(false);
+    if (phase === 'playing') setTimeout(() => inputRefs.current[roundData.categories[0]]?.focus(), 800);
   }, [phase, roundData]);
+
+  // Guarda el borrador según se escribe (mientras no se haya enviado).
+  useEffect(() => {
+    if (!roundData || submitted) return;
+    if (initedSigRef.current !== draftSig(roundData)) return;
+    saveDraft(roundData, answers);
+  }, [answers, roundData, submitted]);
   useEffect(() => { if (forceSubmit && !submitted) { submitAnswers(answersRef.current); setSubmitted(true); } }, [forceSubmit, submitted, submitAnswers]);
   useEffect(() => { if (['collecting','grace','validating'].includes(phase) && !submitted) { submitAnswers(answersRef.current); setSubmitted(true); } }, [phase, submitted, submitAnswers]);
 

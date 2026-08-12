@@ -1,4 +1,5 @@
-const API_KEY = process.env.ANTHROPIC_API_KEY || '';
+const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
+function getApiKey() { return process.env.ANTHROPIC_API_KEY || ''; }
 
 async function validateRound(allAnswers, categories, letter) {
   const results = {};
@@ -14,6 +15,7 @@ async function validateRound(allAnswers, categories, letter) {
     }
   }
 
+  const API_KEY = getApiKey();
   if (!API_KEY || toValidate.length === 0) {
     for (const item of toValidate) results[item.key] = { valid: true, reason: 'sin IA' };
     return results;
@@ -28,20 +30,41 @@ async function validateRound(allAnswers, categories, letter) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 2000,
-        messages: [{ role: 'user', content: `Validador ESTRICTO del juego "¡Basta!" en español. Letra: "${letter}"
+        model: MODEL, max_tokens: 2000,
+        messages: [{ role: 'user', content: `Eres un validador ESTRICTO del juego "¡Basta!" (Scattergories) en español. Para cada par «Categoría → Respuesta» decide si la respuesta es un EJEMPLAR VÁLIDO de esa categoría.
+(La letra inicial la comprueba el programa aparte; tú solo juzgas si el concepto es correcto.)
 
-REGLAS:
-1. DEBE empezar por "${letter}" (ignorar acentos/mayúsculas)
-2. Mínimo 2 caracteres
-3. Debe ser ejemplo DIRECTO y REAL de la categoría
-4. NO relaciones indirectas (Irlanda NO es un río, Mestalla NO es equipo, Illinois NO es postre)
-5. NO inventadas (Instaya NO existe como equipo)
-6. Bolígrafo, banqueta, etc. SÍ son objetos válidos
-7. U2 SÍ es un grupo/cantante válido
+REGLA CLAVE — ejemplar concreto:
+La respuesta debe ser un MIEMBRO o EJEMPLAR concreto e identificable de la categoría.
+NUNCA es válida la palabra genérica de la propia categoría, ni un sinónimo, paráfrasis
+o hiperónimo de ella.
+- "Montaña": "montaña", "monte", "cadena montañosa", "cordillera" → INVÁLIDO;
+  "Mulhacén", "Everest", "Teide" → válido.
+- "Mineral/Piedra": "piedra", "mineral", "roca", "gema" → INVÁLIDO;
+  "Pirita", "Cuarzo", "Diamante" → válido.
+- "Río": "río", "riachuelo", "afluente" → INVÁLIDO; "Miño", "Nilo", "Ebro" → válido.
+- "Mar/Océano": "mar", "océano" → INVÁLIDO; "Mediterráneo", "Atlántico" → válido.
+- "Equipo deportivo": "equipo", "club" → INVÁLIDO; "Valencia CF", "Lakers" → válido.
+- "Grupo/Cantante": "cantante", "grupo", "banda", "artista" → INVÁLIDO;
+  "U2", "Rosalía", "Queen" → válido.
+- "Ciudad": "ciudad", "pueblo" → INVÁLIDO; "Madrid", "Roma" → válido.
 
+OTRAS REGLAS:
+1. Debe ser un ejemplo REAL y DIRECTO de la categoría, no una relación indirecta
+   (Irlanda NO es un río; Mestalla es un estadio, NO un equipo; Illinois NO es un postre).
+2. No valen invenciones ni cosas que no existan ("Instaya" no es un equipo real).
+3. En categorías de sustantivo común (Animal, Fruta, Verdura, Flor, Color, Cosa/Objeto,
+   Profesión/Oficio, Deporte, Instrumento musical, Bebida, Postre, Plato de comida,
+   Ingrediente de cocina, Verbo, Adjetivo, Parte del cuerpo, Prenda de ropa) SÍ vale un
+   miembro común concreto: "perro" (Animal), "manzana" (Fruta), "azul" (Color), "médico"
+   (Profesión), "guitarra" (Instrumento), "fútbol" (Deporte). Pero NO vale la palabra de la
+   categoría en sí ("animal", "fruta", "deporte").
+4. Ignora mayúsculas y acentos. Sé razonable con faltas de ortografía leves.
+
+Evalúa:
 ${promptItems}
-Responde SOLO JSON: [{"category":"...","answer":"...","valid":true/false,"reason":"breve"}]` }],
+Responde SOLO con un array JSON, sin texto adicional:
+[{"category":"...","answer":"...","valid":true,"reason":"breve motivo solo si es inválido"}]` }],
       }),
     });
 
@@ -95,6 +118,7 @@ const FALLBACK_WORDS = {
 };
 
 async function generateScrambledWords(count, difficulty = 'medium') {
+  const API_KEY = getApiKey();
   if (!API_KEY) {
     return (FALLBACK_WORDS[difficulty] || FALLBACK_WORDS.medium).slice(0, count);
   }
@@ -107,7 +131,7 @@ async function generateScrambledWords(count, difficulty = 'medium') {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        model: MODEL, max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }],
       }),
     });

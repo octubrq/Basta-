@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { SocketProvider, useSocket } from './context/SocketContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { GameProvider, useGame } from './context/GameContext';
+import { useWakeLock } from './useWakeLock';
 
 import LoginPage from './pages/LoginPage';
 import LobbyPage from './pages/LobbyPage';
@@ -41,6 +42,9 @@ function AppRouter() {
   const { user, token, loading } = useAuth();
   const { connect, connected, socket } = useSocket();
   const { phase, sessionType } = useGame();
+
+  // Mantener la pantalla encendida durante la partida (fallo silencioso en iOS).
+  useWakeLock(['countdown', 'playing', 'grace', 'collecting', 'validating'].includes(phase));
 
   useEffect(() => { if (token && !connected) connect(token); }, [token, connected, connect]);
   useEffect(() => {

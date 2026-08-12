@@ -49,6 +49,7 @@ export function GameProvider({ children }) {
     setFinalResults(null); setBastaInfo(null); setScoreboard([]); setForceSubmit(false);
     setScrambleData(null); setScrambleResults(null); setScrambleCorrect(null);
     setScrambleTimeLeft(0); setScrambleRunning(false); clearBastaTimers();
+    try { localStorage.removeItem('basta_draft'); } catch {}
   }, [clearBastaTimers]);
 
   useEffect(() => {
@@ -61,10 +62,13 @@ export function GameProvider({ children }) {
 
     socket.on('reconnected', (data) => {
       setGameState(data.state);
+      if (data.standings) setScoreboard(data.standings);
       if (data.sessionType === 'basta') {
         setSessionType('basta');
-        if (data.session === 'playing' || data.session === 'grace') { setPhase('playing'); if (data.roundData) setRoundData(data.roundData); }
-        else if (data.session === 'results') setPhase('results');
+        if (data.roundData) setRoundData(data.roundData);
+        if (data.session === 'playing' || data.session === 'grace') setPhase('playing');
+        else if (['reviewing', 'collecting', 'validating'].includes(data.session)) setPhase('validating');
+        else if (data.session === 'results') { setPhase('results'); if (data.lastResult) setRoundResults(data.lastResult); }
         else setPhase('waiting');
       } else if (data.sessionType === 'scramble') {
         setSessionType('scramble');
@@ -110,7 +114,7 @@ export function GameProvider({ children }) {
     socket.on('round:force_submit', () => setForceSubmit(true));
     socket.on('round:collecting', () => { setPhase('collecting'); clearBastaTimers(); });
     socket.on('round:validating', () => setPhase('validating'));
-    socket.on('round:results', (r) => { setPhase('results'); setRoundResults(r); clearBastaTimers(); });
+    socket.on('round:results', (r) => { setPhase('results'); setRoundResults(r); clearBastaTimers(); try { localStorage.removeItem('basta_draft'); } catch {} });
     socket.on('game:finished', (r) => { setPhase('finished'); setFinalResults(r); clearBastaTimers(); setScrambleRunning(false); });
 
     // === SCRAMBLE ===

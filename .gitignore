@@ -3,3 +3,5 @@ server/basta.db
 client/build/
 .env
 *.tar.gz
+server/basta.db-shm
+server/basta.db-wal
