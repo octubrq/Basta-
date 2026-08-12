@@ -4,7 +4,9 @@ import { useGame } from '../context/GameContext';
 
 export default function ScramblePage() {
   const { user } = useAuth();
-  const { scrambleData, scrambleTimeLeft, scrambleCorrect, scoreboard, submitScramble } = useGame();
+  const { scrambleData, scrambleTimeLeft, scrambleCorrect, scoreboard, submitScramble,
+    adminPaused, adminPauseToggle, skipRound } = useGame();
+  const isAdmin = user?.role === 'admin';
   const [guess, setGuess] = useState('');
   const inputRef = useRef(null);
 
@@ -18,12 +20,23 @@ export default function ScramblePage() {
 
   return (
     <div className="min-h-dvh flex flex-col bg-gradient-to-b from-green-50 via-white to-blue-50">
+      {adminPaused && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center">
+          <p className="font-display text-6xl font-bold text-white animate-pop">⏸️</p>
+          <p className="font-display text-3xl font-bold text-white mt-2">Pausa</p>
+          {isAdmin && <button onClick={adminPauseToggle} className="mt-6 btn-green text-xl px-8 py-3">▶️ Reanudar</button>}
+        </div>
+      )}
       {/* Top */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b-2 border-green-200 px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <h2 className="font-display text-xl font-bold text-green-500">🔤 Letras Locas</h2>
-          <div className={`font-display text-2xl font-bold ${isLow ? 'text-red-400 animate-pulse' : 'text-green-600'}`}>
-            ⏱️ {minutes}:{String(seconds).padStart(2, '0')}
+          <div className="flex items-center gap-2">
+            {isAdmin && <button onClick={adminPauseToggle} className="text-xs bg-orange-50 text-orange-500 px-2 py-1 rounded-lg font-bold border border-orange-200">{adminPaused ? '▶️' : '⏸️'}</button>}
+            {isAdmin && <button onClick={skipRound} className="text-xs bg-gray-50 text-gray-400 px-2 py-1 rounded-lg font-bold border border-gray-200">⏭️</button>}
+            <div className={`font-display text-2xl font-bold ${isLow ? 'text-red-400 animate-pulse' : 'text-green-600'}`}>
+              ⏱️ {minutes}:{String(seconds).padStart(2, '0')}
+            </div>
           </div>
         </div>
       </div>

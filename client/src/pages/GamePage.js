@@ -19,7 +19,9 @@ function saveDraft(rd, answers) {
 
 export default function GamePage() {
   const { user } = useAuth();
-  const { roundData, phase, bastaInfo, graceLeft, fixedLeft, scoreboard, forceSubmit, pressBasta, submitAnswers, gameState } = useGame();
+  const { roundData, phase, bastaInfo, graceLeft, fixedLeft, scoreboard, forceSubmit, pressBasta, submitAnswers,
+    adminPaused, adminPauseToggle, skipRound } = useGame();
+  const isAdmin = user?.role === 'admin';
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [showBoard, setShowBoard] = useState(false);
@@ -67,12 +69,21 @@ export default function GamePage() {
 
   return (
     <div className="min-h-dvh flex flex-col bg-gradient-to-b from-pink-50 via-white to-purple-50">
+      {adminPaused && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center">
+          <p className="font-display text-6xl font-bold text-white animate-pop">⏸️</p>
+          <p className="font-display text-3xl font-bold text-white mt-2">Pausa</p>
+          {isAdmin && <button onClick={adminPauseToggle} className="mt-6 btn-green text-xl px-8 py-3">▶️ Reanudar</button>}
+        </div>
+      )}
       {/* Top */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b-2 border-purple-100 px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-2">
-            <span className="text-purple-300 text-sm font-bold font-display">R{roundData.round}/{gameState?.config?.rounds}</span>
+            <span className="text-purple-300 text-sm font-bold font-display">R{roundData.round}/{roundData.totalRounds}</span>
             <button onClick={() => setShowBoard(!showBoard)} className="text-purple-400 text-xs bg-purple-50 px-2 py-1 rounded-lg font-bold border border-purple-200">🏆</button>
+            {isAdmin && <button onClick={adminPauseToggle} className="text-xs bg-orange-50 text-orange-500 px-2 py-1 rounded-lg font-bold border border-orange-200">{adminPaused ? '▶️' : '⏸️'}</button>}
+            {isAdmin && <button onClick={skipRound} className="text-xs bg-gray-50 text-gray-400 px-2 py-1 rounded-lg font-bold border border-gray-200">⏭️</button>}
           </div>
           <div className="flex items-center gap-2">
             <div className="animate-letter-spin bg-pink-400 text-white font-display text-3xl font-bold w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg border-b-4 border-pink-500">{roundData.letter}</div>

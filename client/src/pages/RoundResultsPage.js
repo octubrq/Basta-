@@ -9,105 +9,125 @@ const S = {
   empty: { bg: 'bg-gray-50', border: 'border-gray-100', text: 'text-gray-300' },
 };
 
+function Arrow({ delta }) {
+  if (!delta) return <span className="text-gray-300 text-xs font-bold w-8 text-center">=</span>;
+  if (delta > 0) return <span className="text-green-500 text-xs font-bold w-8 text-center">▲{delta}</span>;
+  return <span className="text-red-400 text-xs font-bold w-8 text-center">▼{-delta}</span>;
+}
+
+const MEDAL = ['🥇', '🥈', '🥉'];
+const PODIUM_H = [104, 74, 52];
+const PODIUM_BG = ['bg-yellow-50 border-yellow-200', 'bg-gray-100 border-gray-200', 'bg-orange-50 border-orange-200'];
+
 export default function RoundResultsPage() {
   const { user } = useAuth();
-  const { roundResults, nextRound, gameState } = useGame();
-  const [view, setView] = useState('byCategory');
-  if (!roundResults) return null;
+  const { roundResult, nextRound, resetMatch } = useGame();
+  const [showDetail, setShowDetail] = useState(false);
+  if (!roundResult) return null;
+  const { prueba, reveal, podium = [], standings = [], roundIndex, totalRounds, isLast, solo } = roundResult;
   const isAdmin = user?.role === 'admin';
-  const players = gameState?.players || [];
-  const { letter, comboLetter, categories, details, standings, bastaPlayer } = roundResults;
-  const getName = (id) => players.find(p => String(p.id) === String(id))?.name || '?';
-  const totals = {};
-  for (const [pid, cd] of Object.entries(details)) { if (pid.startsWith('_')) continue; let t = 0;
-    for (const [k, d] of Object.entries(cd)) { if (!k.startsWith('_') && d?.total) t += d.total; }
-    if (cd._basta_penalty) t += cd._basta_penalty.penalty; totals[pid] = t; }
+  const canAdvance = isAdmin || solo;
+  const nameOf = (id) => standings.find(s => String(s.id) === String(id))?.name
+    || podium.find(p => String(p.id) === String(id))?.name || '?';
+
+  // Orden visual del podio: 2º, 1º, 3º
+  const order = [podium[1], podium[0], podium[2]];
+  const rankOf = [1, 0, 2];
 
   return (
-    <div className="min-h-dvh flex flex-col pb-28 bg-gradient-to-b from-pink-50 via-white to-purple-50">
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b-2 border-purple-100 px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div>
-            <p className="text-purple-300 text-xs font-bold">Ronda {roundResults.round}</p>
-            <div className="flex gap-2 mt-1">
-              <span className="bg-pink-400 text-white font-display text-xl font-bold w-9 h-9 rounded-xl flex items-center justify-center border-b-2 border-pink-500">{letter}</span>
-              {comboLetter && <span className="bg-yellow-300 text-gray-700 font-display text-lg font-bold w-8 h-8 rounded-xl flex items-center justify-center border-b-2 border-yellow-400">{comboLetter}</span>}
-            </div>
-          </div>
-          <div className="flex bg-purple-50 rounded-2xl p-0.5 border border-purple-200">
-            {['byCategory','byPlayer'].map(m => (
-              <button key={m} onClick={() => setView(m)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${view === m ? 'bg-purple-400 text-white' : 'text-purple-300'}`}>
-                {m === 'byCategory' ? 'Categoría' : 'Jugador'}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="min-h-dvh flex flex-col pb-28 bg-gradient-to-b from-yellow-50 via-white to-pink-50">
+      <div className="text-center pt-6 pb-2">
+        <p className="text-purple-300 text-sm font-bold font-display">Ronda {roundIndex + 1} de {totalRounds}</p>
+        <h1 className="font-display text-3xl font-bold text-purple-600">🏆 Podio de la ronda</h1>
       </div>
 
-      {bastaPlayer && (
-        <div className="px-4 py-2 max-w-2xl mx-auto w-full">
-          <div className="bg-red-50 border-2 border-red-200 rounded-2xl px-3 py-2 text-center">
-            <span className="text-red-400 text-sm font-bold">💥 ¡{getName(bastaPlayer)} gritó BASTA!{details[String(bastaPlayer)]?._basta_penalty && ` · ${details[String(bastaPlayer)]._basta_penalty.penalty} pts`}</span>
+      <div className="w-full max-w-lg mx-auto px-4 space-y-4">
+        {/* Podio */}
+        <div className="bg-white rounded-3xl p-5 shadow-md border-2 border-yellow-200">
+          <div className="flex items-end justify-center gap-3" style={{ minHeight: 170 }}>
+            {order.map((pp, idx) => pp ? (
+              <div key={pp.id} className="flex flex-col items-center animate-slide-up" style={{ animationDelay: `${idx * 0.15}s` }}>
+                <div className={`rounded-2xl flex items-center justify-center font-display font-bold shadow-sm ${rankOf[idx] === 0 ? 'w-16 h-16 text-2xl bg-yellow-200 text-yellow-700 ring-2 ring-yellow-300' : 'w-12 h-12 text-lg bg-gray-200 text-gray-500'}`}>
+                  {pp.name[0].toUpperCase()}
+                </div>
+                <p className="text-gray-700 text-xs font-bold mt-1 truncate max-w-20">{pp.name}</p>
+                <p className="text-purple-500 text-sm font-bold">+{pp.roundScore}</p>
+                <div className={`w-20 rounded-t-2xl mt-1 flex items-end justify-center border-2 ${PODIUM_BG[rankOf[idx]]}`} style={{ height: PODIUM_H[rankOf[idx]] }}>
+                  <span className="text-3xl mb-2">{MEDAL[rankOf[idx]]}</span>
+                </div>
+              </div>
+            ) : <div key={idx} className="w-20" />)}
           </div>
         </div>
-      )}
 
-      <div className="flex-1 px-4 max-w-2xl mx-auto w-full mt-2 space-y-4">
-        {view === 'byCategory' && categories.map((cat, idx) => (
-          <div key={cat} className="bg-white rounded-3xl p-4 shadow-md border-2 border-purple-100 animate-pop" style={{animationDelay:`${idx*0.05}s`}}>
-            <h3 className="font-display text-purple-500 font-bold text-sm mb-2">{cat}</h3>
-            <div className="space-y-1.5">
-              {Object.entries(details).filter(([k])=>!k.startsWith('_')).map(([pid, cd]) => {
-                const d = cd[cat]; if (!d) return null; const s = S[d.status] || S.empty;
-                return (<div key={pid} className={`flex items-center gap-2 ${s.bg} ${s.border} border-2 rounded-xl px-3 py-1.5`}>
-                  <span className="text-gray-500 text-sm font-bold w-20 truncate">{getName(pid)}</span>
-                  <div className="flex-1 min-w-0"><span className="text-gray-700 font-bold text-sm truncate block">{d.answer||'—'}</span>
-                    {d.status==='invalid'&&d.reason&&<span className="text-red-300 text-xs">{d.reason}</span>}</div>
-                  {d.combo>0&&<span className="text-yellow-500 text-xs font-bold">+{d.combo}🔥</span>}
-                  <span className={`${s.text} text-sm font-bold min-w-[36px] text-right`}>{d.total}</span>
-                </div>);
-              })}
-            </div>
-          </div>
-        ))}
-
-        {view === 'byPlayer' && Object.entries(details).filter(([k])=>!k.startsWith('_'))
-          .sort((a,b)=>(totals[b[0]]||0)-(totals[a[0]]||0)).map(([pid, cd], idx) => (
-          <div key={pid} className="bg-white rounded-3xl p-4 shadow-md border-2 border-purple-100 animate-pop" style={{animationDelay:`${idx*0.05}s`}}>
-            <div className="flex justify-between mb-2">
-              <h3 className="font-display text-gray-700 font-bold">{getName(pid)}</h3>
-              <span className="font-display text-xl text-purple-500 font-bold">+{totals[pid]||0}</span>
-            </div>
-            {categories.map(cat => { const d = cd[cat]; if(!d) return null; const s = S[d.status]||S.empty;
-              return (<div key={cat} className={`flex items-center gap-2 ${s.bg} rounded-xl px-3 py-1 mb-1`}>
-                <span className="text-gray-400 text-xs w-24 truncate">{cat}</span>
-                <span className="text-gray-700 text-sm font-bold flex-1 truncate">{d.answer||'—'}</span>
-                {d.combo>0&&<span className="text-yellow-500 text-xs">🔥</span>}
-                <span className={`${s.text} text-xs font-bold`}>{d.total}</span>
-              </div>);
-            })}
-          </div>
-        ))}
-
-        <div className="bg-white rounded-3xl p-4 shadow-md border-2 border-yellow-200">
-          <h3 className="font-display text-purple-500 font-bold mb-3">🏆 Clasificación</h3>
+        {/* Clasificación global con flechas */}
+        <div className="bg-white rounded-3xl p-4 shadow-md border-2 border-purple-100">
+          <h3 className="font-display text-purple-500 font-bold mb-3">📊 Clasificación general</h3>
           {standings.map((s, i) => (
-            <div key={s.id} className={`flex items-center gap-3 rounded-xl px-3 py-2 mb-1 border-2 ${
-              String(s.id)===String(user?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-100'
+            <div key={s.id} className={`flex items-center gap-2 rounded-xl px-3 py-2 mb-1 border-2 ${
+              String(s.id) === String(user?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-100'
             }`}>
-              <span className="font-display text-lg font-bold w-6 text-center">{i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`}</span>
-              <span className="text-gray-700 font-bold flex-1">{s.name}</span>
-              <span className="font-display text-purple-500 font-bold">{s.totalScore}</span>
+              <span className="font-display text-lg font-bold w-7 text-center">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
+              <span className="text-gray-800 font-bold flex-1 truncate">{s.name}</span>
+              <Arrow delta={s.delta} />
+              <span className="font-display text-purple-500 font-bold w-10 text-right">{s.totalScore}</span>
             </div>
           ))}
         </div>
+
+        {/* Detalle de la ronda (revelación) */}
+        {reveal?.type === 'basta' && (
+          <div>
+            <button onClick={() => setShowDetail(!showDetail)}
+              className="w-full bg-white rounded-2xl p-3 shadow-md border-2 border-purple-100 font-display font-bold text-purple-500 flex items-center justify-between">
+              <span>🔍 Respuestas (letra {reveal.letter})</span><span>{showDetail ? '△' : '▽'}</span>
+            </button>
+            {showDetail && (
+              <div className="mt-2 space-y-3">
+                {reveal.categories.map(cat => (
+                  <div key={cat} className="bg-white rounded-2xl p-3 shadow-sm border-2 border-purple-100">
+                    <h4 className="font-display text-purple-500 font-bold text-sm mb-2">{cat}</h4>
+                    {Object.entries(reveal.details).filter(([k]) => !k.startsWith('_')).map(([pid, cd]) => {
+                      const d = cd[cat]; if (!d) return null; const st = S[d.status] || S.empty;
+                      return (
+                        <div key={pid} className={`flex items-center gap-2 ${st.bg} ${st.border} border-2 rounded-xl px-3 py-1.5 mb-1`}>
+                          <span className="text-gray-500 text-sm font-bold w-20 truncate">{nameOf(pid)}</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-gray-800 font-bold text-sm truncate block">{d.answer || '—'}</span>
+                            {d.status === 'invalid' && d.reason && <span className="text-red-300 text-xs">{d.reason}</span>}
+                          </div>
+                          <span className={`${st.text} text-sm font-bold`}>{d.total}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {reveal?.type === 'scramble' && reveal.log?.length > 0 && (
+          <div className="bg-white rounded-2xl p-3 shadow-md border-2 border-green-200">
+            <h4 className="font-display text-green-500 font-bold text-sm mb-2">📜 Palabras acertadas</h4>
+            {reveal.log.map((l, i) => (
+              <div key={i} className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-1.5 mb-1 border border-green-200">
+                <span className="text-gray-700 font-bold text-sm">{l.word}</span>
+                <span className="text-gray-300">→</span>
+                <span className="text-green-500 text-sm font-bold">{l.winner}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent">
-        <div className="max-w-2xl mx-auto">
-          {isAdmin ? <button onClick={nextRound} className="btn-pink w-full text-xl py-4">
-            {roundResults.round >= gameState?.config?.rounds ? '🏆 Final' : `➡️ Ronda ${roundResults.round + 1}`}
-          </button> : <p className="text-purple-300 text-center font-display py-4">⏳ Esperando...</p>}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/95 to-transparent">
+        <div className="max-w-lg mx-auto space-y-2">
+          {canAdvance ? (
+            <button onClick={nextRound} className="btn-pink w-full text-xl py-4">
+              {isLast ? '🏆 Ver resultado final' : `➡️ Ronda ${roundIndex + 2}`}
+            </button>
+          ) : <p className="text-purple-300 text-center font-display py-3">⏳ Esperando al admin...</p>}
+          {isAdmin && <button onClick={resetMatch} className="w-full text-purple-300 text-sm font-bold py-1">✕ Terminar partida</button>}
         </div>
       </div>
     </div>

@@ -56,13 +56,19 @@ export function AuthProvider({ children }) {
     save(d.user, d.token); return d;
   }, []);
 
+  const playerSolo = useCallback(async (name, password) => {
+    const r = await fetch(`${API}/player/solo`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, password }) });
+    const d = await r.json(); if (d.error) throw new Error(d.error);
+    save(d.user, d.token); return d;
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null); setToken(null);
     localStorage.removeItem('basta_token');
     localStorage.removeItem('basta_user');
   }, []);
 
-  return <Ctx.Provider value={{ user, token, loading, adminLogin, adminRegister, playerJoin, logout }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, token, loading, adminLogin, adminRegister, playerJoin, playerSolo, logout }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() { return useContext(Ctx); }

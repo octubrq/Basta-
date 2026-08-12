@@ -8,7 +8,7 @@ import { useWakeLock } from './useWakeLock';
 
 import LoginPage from './pages/LoginPage';
 import LobbyPage from './pages/LobbyPage';
-import CountdownPage from './pages/CountdownPage';
+import InstructionsPage from './pages/InstructionsPage';
 import GamePage from './pages/GamePage';
 import ScramblePage from './pages/ScramblePage';
 import RoundResultsPage from './pages/RoundResultsPage';
@@ -21,7 +21,7 @@ function ExitButton() {
 
   // ONLY admin sees the exit button
   if (user?.role !== 'admin') return null;
-  if (!['waiting','countdown','playing','grace','collecting','validating','results','finished'].includes(phase)) return null;
+  if (!['waiting','instructions','playing','grace','collecting','validating','result','finished'].includes(phase)) return null;
 
   return (
     <button onClick={() => {
@@ -41,10 +41,10 @@ function ExitButton() {
 function AppRouter() {
   const { user, token, loading } = useAuth();
   const { connect, connected, socket } = useSocket();
-  const { phase, sessionType } = useGame();
+  const { phase, currentPrueba } = useGame();
 
   // Mantener la pantalla encendida durante la partida (fallo silencioso en iOS).
-  useWakeLock(['countdown', 'playing', 'grace', 'collecting', 'validating'].includes(phase));
+  useWakeLock(['instructions', 'playing', 'grace', 'collecting', 'validating'].includes(phase));
 
   useEffect(() => { if (token && !connected) connect(token); }, [token, connected, connect]);
   useEffect(() => {
@@ -73,11 +73,11 @@ function AppRouter() {
 
   let page;
   switch (phase) {
-    case 'countdown': page = <CountdownPage />; break;
+    case 'instructions': page = <InstructionsPage />; break;
     case 'playing': case 'grace': case 'collecting': case 'validating':
-      page = sessionType === 'scramble' ? <ScramblePage /> : <GamePage />;
+      page = currentPrueba === 'scramble' ? <ScramblePage /> : <GamePage />;
       break;
-    case 'results': page = <RoundResultsPage />; break;
+    case 'result': page = <RoundResultsPage />; break;
     case 'finished': page = <FinalResultsPage />; break;
     case 'waiting': page = <LobbyPage />; break;
     default: page = <LobbyPage />;

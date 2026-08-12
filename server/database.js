@@ -23,7 +23,19 @@ db.exec(`
     rounds INTEGER,
     player_count INTEGER
   );
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
 `);
+
+function getSetting(key) {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+  return row ? row.value : null;
+}
+function setSetting(key, value) {
+  db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, value);
+}
 
 // Create default admin if not exists
 const bcrypt = require('bcryptjs');
@@ -35,3 +47,5 @@ if (!existing) {
 }
 
 module.exports = db;
+module.exports.getSetting = getSetting;
+module.exports.setSetting = setSetting;
