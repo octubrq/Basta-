@@ -81,6 +81,9 @@ export function GameProvider({ children }) {
           if (data.play.word) setScrambleData(data.play.word);
           setScrambleTimeLeft((data.play.content?.minutes || 2) * 60); setScrambleRunning(true);
         }
+        // Pruebas de canal genérico: restaurar el paso/revelación actuales
+        if (data.step) setStepData(data.step);
+        if (data.stepReveal) setStepReveal(data.stepReveal);
       } else if (data.result) {
         setRoundResult(data.result); setPhase('result');
       } else if (data.finished) {

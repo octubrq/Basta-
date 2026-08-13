@@ -80,7 +80,12 @@ function ctx() {
   const m = game.match;
   return {
     io: ioRef, game, m, solo: m.mode === 'solo',
-    broadcast: (ev, d) => ioRef.emit(ev, d),
+    broadcast: (ev, d) => {
+      // Guardar el último paso/revelación para poder restaurarlos al reconectar.
+      if (ev === 'step:show') { m.lastStep = d; m.lastReveal = null; }
+      else if (ev === 'step:reveal') { m.lastReveal = d; }
+      ioRef.emit(ev, d);
+    },
     emitTo: (pid, ev, d) => { const p = game.players.get(String(pid)); if (p?.socketId) ioRef.to(p.socketId).emit(ev, d); },
     nameOf,
     playerIds: () => matchPlayers().map(p => String(p.id)),
@@ -299,6 +304,10 @@ function reconnectData() {
       prueba: 'scramble', content: { minutes: game.config.scrambleMinutes },
       word: m.runtime?.scrambled ? { scrambled: m.runtime.scrambled, wordNumber: m.runtime.index, total: m.runtime.words?.length } : null,
     };
+    else base.play = { prueba: m.currentPrueba }; // pruebas de canal genérico (masomenos, pistas, vf, ordena...)
+    // Paso/revelación actuales del canal genérico (si los hay)
+    base.step = m.lastStep || null;
+    base.stepReveal = m.lastReveal || null;
     base.adminPaused = m.adminPaused;
   } else if (['reveal', 'standings'].includes(m.state)) {
     base.result = m.lastRoundResult;
