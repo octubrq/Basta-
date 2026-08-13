@@ -5,11 +5,12 @@
 const basta = require('./basta');
 const scramble = require('./scramble');
 const masomenos = require('./masomenos');
+const pistas = require('./pistas');
 
-const REGISTRY = { basta, scramble, masomenos };
+const REGISTRY = { basta, scramble, masomenos, pistas };
 
 // Orden en que se muestran en el lobby.
-const ORDER = ['basta', 'scramble', 'masomenos'];
+const ORDER = ['basta', 'scramble', 'masomenos', 'pistas'];
 
 function getPrueba(id) { return REGISTRY[id] || null; }
 

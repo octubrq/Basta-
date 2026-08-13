@@ -12,11 +12,12 @@ import InstructionsPage from './pages/InstructionsPage';
 import GamePage from './pages/GamePage';
 import ScramblePage from './pages/ScramblePage';
 import MasOMenosPage from './pages/MasOMenosPage';
+import PistasPage from './pages/PistasPage';
 import RoundResultsPage from './pages/RoundResultsPage';
 import FinalResultsPage from './pages/FinalResultsPage';
 
 // Página de juego según la prueba activa.
-const PLAY_PAGES = { basta: GamePage, scramble: ScramblePage, masomenos: MasOMenosPage };
+const PLAY_PAGES = { basta: GamePage, scramble: ScramblePage, masomenos: MasOMenosPage, pistas: PistasPage };
 
 function ExitButton() {
   const { user } = useAuth();
