@@ -16,8 +16,7 @@ import FinalResultsPage from './pages/FinalResultsPage';
 
 function ExitButton() {
   const { user } = useAuth();
-  const { phase, resetToLobby } = useGame();
-  const { socket } = useSocket();
+  const { phase, resetMatch, resetToLobby } = useGame();
 
   // ONLY admin sees the exit button
   if (user?.role !== 'admin') return null;
@@ -25,11 +24,10 @@ function ExitButton() {
 
   return (
     <button onClick={() => {
-      if (window.confirm('¿Salir? Todos los jugadores serán expulsados.')) {
-        socket?.disconnect();
-        socket?.connect();
-        resetToLobby();
-        toast.success('Partida cerrada');
+      if (window.confirm('¿Terminar la partida y volver al inicio?')) {
+        resetMatch();     // el servidor cierra la partida y avisa a todos
+        resetToLobby();   // y este cliente vuelve ya al inicio
+        toast.success('Partida terminada');
       }
     }}
     className="fixed top-3 left-3 z-50 bg-black/30 hover:bg-nintendo-red/80 backdrop-blur-sm text-white/70 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full transition-all border border-white/10">
