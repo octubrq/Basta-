@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 
@@ -76,11 +76,12 @@ function PruebaParams({ config, updateConfig }) {
             <input type="range" min="4" max="10" value={config.categoriesPerRound || 6} onChange={e => updateConfig({ categoriesPerRound: +e.target.value })} className="w-full accent-pink-500" />
           </div>
           <div>
-            <label className="text-sm font-bold text-pink-500 block mb-2">Modo</label>
+            <label className="text-sm font-bold text-pink-500 block mb-1">Letra combo</label>
+            <p className="text-pink-400 text-xs mb-2 leading-snug">Con combo salen 2 letras: la palabra debe empezar por la 1ª, y si además contiene la 2ª ganas +10 puntos.</p>
             <div className="flex gap-2">
-              {['classic', 'combo'].map(m => (
+              {[['classic', '📝 Sin combo'], ['combo', '🔥 Con combo']].map(([m, label]) => (
                 <button key={m} onClick={() => updateConfig({ mode: m })}
-                  className={`flex-1 py-2 rounded-xl font-bold text-sm border-2 ${config.mode === m ? 'bg-pink-500 text-white border-pink-600' : 'bg-pink-50 text-pink-400 border-pink-200'}`}>{m === 'classic' ? '📝 Clásico' : '🔥 Combo'}</button>
+                  className={`flex-1 py-2 rounded-xl font-bold text-sm border-2 ${config.mode === m ? 'bg-pink-500 text-white border-pink-600' : 'bg-pink-50 text-pink-400 border-pink-200'}`}>{label}</button>
               ))}
             </div>
           </div>
@@ -136,6 +137,12 @@ export default function LobbyPage() {
   const { user, logout } = useAuth();
   const { gameState, activate, deactivate, updateConfig, startMatch, setSoloPassword } = useGame();
   const [showConfig, setShowConfig] = useState(false);
+  const configRef = useRef(null);
+  const toggleConfig = () => setShowConfig(v => {
+    const nv = !v;
+    if (nv) setTimeout(() => configRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+    return nv;
+  });
   const isAdmin = user?.role === 'admin';
   const isSolo = !isAdmin && user?.solo;
   const players = gameState?.players || [];
@@ -190,7 +197,7 @@ export default function LobbyPage() {
 
   // ===== ADMIN =====
   return (
-    <div className="min-h-dvh p-4 pb-40 bg-gradient-to-b from-pink-50 via-white to-blue-50">
+    <div className="min-h-dvh p-4 pb-[28rem] bg-gradient-to-b from-pink-50 via-white to-blue-50">
       <Header user={user} logout={logout} />
       <div className="max-w-lg mx-auto space-y-4">
         {/* Puerta */}
@@ -211,9 +218,9 @@ export default function LobbyPage() {
 
         <MatchConfig pruebas={pruebas} selected={selected} setSelected={setSelected} rounds={rounds} setRounds={setRounds} order={order} setOrder={setOrder} />
 
-        <button onClick={() => setShowConfig(!showConfig)}
+        <button ref={configRef} onClick={toggleConfig}
           className="w-full bg-white rounded-3xl p-4 shadow-md border-2 border-purple-100 text-left flex items-center justify-between">
-          <span className="font-display font-bold text-purple-600">⚙️ Ajustes de las pruebas</span>
+          <span className="font-display font-bold text-purple-600">⚙️ Ajustes de las pruebas y contraseña de solo</span>
           <span className="text-purple-300 text-xl">{showConfig ? '△' : '▽'}</span>
         </button>
         {showConfig && <PruebaParams config={config} updateConfig={updateConfig} />}

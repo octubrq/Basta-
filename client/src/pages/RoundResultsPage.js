@@ -60,6 +60,32 @@ export default function RoundResultsPage() {
           </div>
         </div>
 
+        {/* Tus respuestas (solo Basta) — cada jugador ve las suyas */}
+        {reveal?.type === 'basta' && reveal.details?.[String(user?.id)] && (
+          <div className="bg-white rounded-3xl p-4 shadow-md border-2 border-pink-200">
+            <h3 className="font-display text-pink-500 font-bold mb-3">📝 Tus respuestas (letra {reveal.letter})</h3>
+            <div className="space-y-1.5">
+              {reveal.categories.map(cat => {
+                const d = reveal.details[String(user?.id)][cat];
+                if (!d) return null;
+                const st = S[d.status] || S.empty;
+                const label = d.status === 'unique' ? '✓ Válida' : d.status === 'repeated' ? '≈ Repetida'
+                  : d.status === 'invalid' ? '✗ No vale' : '— Vacía';
+                return (
+                  <div key={cat} className={`flex items-center gap-2 ${st.bg} ${st.border} border-2 rounded-xl px-3 py-2`}>
+                    <span className="text-gray-400 text-xs font-bold w-24 truncate">{cat}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-gray-800 font-bold text-sm truncate block">{d.answer || '—'}</span>
+                      <span className={`${st.text} text-xs font-bold`}>{label}{d.status === 'invalid' && d.reason ? ` · ${d.reason}` : ''}</span>
+                    </div>
+                    <span className={`${st.text} font-display font-bold text-lg w-8 text-right`}>{d.total > 0 ? `+${d.total}` : d.total}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Clasificación global con flechas */}
         <div className="bg-white rounded-3xl p-4 shadow-md border-2 border-purple-100">
           <h3 className="font-display text-purple-500 font-bold mb-3">📊 Clasificación general</h3>
@@ -80,7 +106,7 @@ export default function RoundResultsPage() {
           <div>
             <button onClick={() => setShowDetail(!showDetail)}
               className="w-full bg-white rounded-2xl p-3 shadow-md border-2 border-purple-100 font-display font-bold text-purple-500 flex items-center justify-between">
-              <span>🔍 Respuestas (letra {reveal.letter})</span><span>{showDetail ? '△' : '▽'}</span>
+              <span>👥 Respuestas de todos</span><span>{showDetail ? '△' : '▽'}</span>
             </button>
             {showDetail && (
               <div className="mt-2 space-y-3">

@@ -59,7 +59,15 @@ OTRAS REGLAS:
    miembro común concreto: "perro" (Animal), "manzana" (Fruta), "azul" (Color), "médico"
    (Profesión), "guitarra" (Instrumento), "fútbol" (Deporte). Pero NO vale la palabra de la
    categoría en sí ("animal", "fruta", "deporte").
-4. Ignora mayúsculas y acentos. Sé razonable con faltas de ortografía leves.
+4. MUY IMPORTANTE — entidades reales que coinciden con un nombre común: si existe una
+   entidad REAL y razonablemente conocida (grupo, cantante, película, serie, libro, marca,
+   equipo, personaje...) con ese nombre, es VÁLIDA aunque la palabra sea también un animal,
+   objeto o sustantivo común. NO exijas el "nombre completo": basta el nombre por el que se
+   conoce. Ante la duda razonable de que exista, ACÉPTALA.
+   Ejemplos VÁLIDOS: "Pantera" (grupo de heavy metal) para Grupo/Cantante; "Queen", "Oasis",
+   "Gorillaz" para Grupo/Cantante; "Coco", "Up" para Película; "Nirvana" para Grupo/Cantante.
+   Sigue siendo INVÁLIDO solo el término genérico de la categoría ("grupo", "cantante", "banda").
+5. Ignora mayúsculas y acentos. Sé razonable con faltas de ortografía leves.
 
 Evalúa:
 ${promptItems}

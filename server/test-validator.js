@@ -36,6 +36,9 @@ const CASES = [
   { cat: 'Equipo deportivo', answer: 'Valencia CF', expected: true },
   { cat: 'Grupo/Cantante', answer: 'U2', expected: true },
   { cat: 'Grupo/Cantante', answer: 'Rosalía', expected: true },
+  { cat: 'Grupo/Cantante', answer: 'Pantera', expected: true },   // grupo real que coincide con animal
+  { cat: 'Grupo/Cantante', answer: 'Oasis', expected: true },     // grupo real que coincide con nombre común
+  { cat: 'Película', answer: 'Coco', expected: true },            // película real que coincide con nombre común
   { cat: 'Ciudad', answer: 'Madrid', expected: true },
   { cat: 'País', answer: 'Francia', expected: true },
   { cat: 'Animal', answer: 'perro', expected: true },
