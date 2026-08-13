@@ -152,6 +152,7 @@ io.on('connection', (socket) => {
   socket.on('player:answers', forward('player:answers'));
   socket.on('player:basta', forward('player:basta'));
   socket.on('scramble:answer', forward('scramble:answer'));
+  socket.on('step:answer', forward('step:answer')); // canal genérico (pruebas nuevas)
 
   // ===== Desconexión =====
   socket.on('disconnect', () => {

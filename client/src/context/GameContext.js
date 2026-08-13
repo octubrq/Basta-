@@ -23,6 +23,9 @@ export function GameProvider({ children }) {
   const [scrambleTimeLeft, setScrambleTimeLeft] = useState(0);
   const [scrambleCorrect, setScrambleCorrect] = useState(null);
   const [scrambleRunning, setScrambleRunning] = useState(false);
+  // Canal genérico de "pasos" reutilizado por las pruebas nuevas (Fase 4).
+  const [stepData, setStepData] = useState(null);
+  const [stepReveal, setStepReveal] = useState(null);
 
   const graceRef = useRef(null);
   const fixedRef = useRef(null);
@@ -104,6 +107,7 @@ export function GameProvider({ children }) {
     // ===== JUEGO =====
     socket.on('round:play', (d) => {
       setCurrentPrueba(d.prueba); setPhase('playing'); setForceSubmit(false); setAdminPaused(false);
+      setStepData(null); setStepReveal(null);
       const meta = instrRef.current || { roundIndex: 0, totalRounds: 1 };
       if (d.prueba === 'basta') {
         setRoundData({ ...d.content, round: meta.roundIndex + 1, totalRounds: meta.totalRounds });
@@ -148,13 +152,18 @@ export function GameProvider({ children }) {
     socket.on('scramble:word', (d) => { setScrambleData(d); setScrambleCorrect(null); });
     socket.on('scramble:correct', (d) => setScrambleCorrect(d));
 
+    // ===== CANAL GENÉRICO DE PASOS (pruebas nuevas) =====
+    socket.on('step:show', (d) => { setStepData(d); setStepReveal(null); });
+    socket.on('step:reveal', (d) => setStepReveal(d));
+
     socket.on('admin:left', ({ message }) => { toast.error(message); resetToLobby(); });
 
     return () => {
       ['game:state', 'reconnected', 'scoreboard:update', 'player:joined', 'error:message', 'info:message',
         'round:instructions', 'round:instr_tick', 'round:play', 'round:basta', 'round:force_submit',
         'round:collecting', 'round:validating', 'round:result', 'round:skipped', 'match:finished',
-        'round:paused', 'round:resumed', 'scramble:word', 'scramble:correct', 'admin:left'].forEach(e => socket.off(e));
+        'round:paused', 'round:resumed', 'scramble:word', 'scramble:correct',
+        'step:show', 'step:reveal', 'admin:left'].forEach(e => socket.off(e));
       clearBastaTimers();
     };
   }, [socket, clearBastaTimers, resetToLobby]);
@@ -165,6 +174,8 @@ export function GameProvider({ children }) {
     gameState, phase, currentPrueba, instr, roundData, roundResult, finalResult,
     bastaInfo, graceLeft, fixedLeft, scoreboard, forceSubmit, adminPaused,
     scrambleData, scrambleTimeLeft, scrambleCorrect,
+    stepData, stepReveal,
+    submitStep: (value) => emit('step:answer', value),
     // admin / lobby
     activate: () => emit('admin:activate'),
     deactivate: () => emit('admin:deactivate'),

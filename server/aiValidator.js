@@ -159,6 +159,30 @@ async function generateScrambledWords(count, difficulty = 'medium') {
   }
 }
 
+// Helper genérico: pide a Claude una respuesta y devuelve el texto (o null).
+async function callClaude(prompt, maxTokens = 1200) {
+  const API_KEY = getApiKey();
+  if (!API_KEY) return null;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!res.ok) { console.error('Claude content error:', res.status); return null; }
+    const data = await res.json();
+    return data.content?.[0]?.text || '';
+  } catch (err) { console.error('Claude content err:', err.message); return null; }
+}
+
+// Extrae el primer array u objeto JSON de un texto.
+function extractJSON(text) {
+  if (!text) return null;
+  const m = text.match(/[[{][\s\S]*[\]}]/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch { return null; }
+}
+
 function scrambleWord(word) {
   const letters = word.split('');
   let scrambled;
@@ -170,4 +194,4 @@ function scrambleWord(word) {
   return scrambled;
 }
 
-module.exports = { validateRound, generateScrambledWords, scrambleWord };
+module.exports = { validateRound, generateScrambledWords, scrambleWord, callClaude, extractJSON };

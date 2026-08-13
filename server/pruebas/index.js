@@ -4,11 +4,12 @@
 // Las 6 pruebas nuevas de la Fase 4 se irán añadiendo aquí.
 const basta = require('./basta');
 const scramble = require('./scramble');
+const masomenos = require('./masomenos');
 
-const REGISTRY = { basta, scramble };
+const REGISTRY = { basta, scramble, masomenos };
 
 // Orden en que se muestran en el lobby.
-const ORDER = ['basta', 'scramble'];
+const ORDER = ['basta', 'scramble', 'masomenos'];
 
 function getPrueba(id) { return REGISTRY[id] || null; }
 

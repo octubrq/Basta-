@@ -11,8 +11,12 @@ import LobbyPage from './pages/LobbyPage';
 import InstructionsPage from './pages/InstructionsPage';
 import GamePage from './pages/GamePage';
 import ScramblePage from './pages/ScramblePage';
+import MasOMenosPage from './pages/MasOMenosPage';
 import RoundResultsPage from './pages/RoundResultsPage';
 import FinalResultsPage from './pages/FinalResultsPage';
+
+// Página de juego según la prueba activa.
+const PLAY_PAGES = { basta: GamePage, scramble: ScramblePage, masomenos: MasOMenosPage };
 
 function ExitButton() {
   const { user } = useAuth();
@@ -72,9 +76,11 @@ function AppRouter() {
   let page;
   switch (phase) {
     case 'instructions': page = <InstructionsPage />; break;
-    case 'playing': case 'grace': case 'collecting': case 'validating':
-      page = currentPrueba === 'scramble' ? <ScramblePage /> : <GamePage />;
+    case 'playing': case 'grace': case 'collecting': case 'validating': {
+      const PlayPage = PLAY_PAGES[currentPrueba] || GamePage;
+      page = <PlayPage />;
       break;
+    }
     case 'result': page = <RoundResultsPage />; break;
     case 'finished': page = <FinalResultsPage />; break;
     case 'waiting': page = <LobbyPage />; break;
