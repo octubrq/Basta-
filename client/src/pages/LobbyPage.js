@@ -11,13 +11,25 @@ const DIFFICULTIES = [
   { key: 'hard', label: '🔥 Difícil' }, { key: 'extreme', label: '💀 Extremo' },
 ];
 
+// Resumen legible de la configuración elegida.
+function summaryText(pruebas, selected, rounds, order) {
+  const names = pruebas.filter(p => selected.includes(p.id)).map(p => p.name);
+  if (!names.length) return 'Marca al menos un juego 👆';
+  const juegos = names.length <= 2 ? names.join(' y ') : `${names.length} juegos`;
+  return `${juegos} · ${rounds} ronda${rounds > 1 ? 's' : ''} · ${order === 'random' ? 'aleatorio' : 'en orden'}`;
+}
+
 // Panel de configuración de partida (compartido por admin y jugador solo).
 function MatchConfig({ pruebas, selected, setSelected, rounds, setRounds, order, setOrder }) {
   const toggle = (id) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
   return (
-    <div className="bg-white rounded-3xl p-5 shadow-md border-2 border-purple-100 space-y-5">
+    <div className="bg-white rounded-3xl p-5 shadow-lg border-2 border-purple-300 ring-4 ring-purple-100 space-y-5">
+      <div className="bg-purple-50 border-2 border-purple-200 rounded-2xl px-4 py-3 text-center">
+        <p className="font-display font-bold text-purple-600">👇 Prepara tu partida antes de empezar</p>
+        <p className="text-purple-400 text-sm font-bold">Marca los juegos y elige las rondas</p>
+      </div>
       <div>
-        <h3 className="font-display font-bold text-purple-600 mb-2">🎲 Pruebas de la partida</h3>
+        <h3 className="font-display font-bold text-purple-600 mb-2">🎲 Juegos ({selected.length} elegido{selected.length === 1 ? '' : 's'})</h3>
         <div className="space-y-2">
           {pruebas.map(p => {
             const on = selected.includes(p.id);
@@ -165,6 +177,7 @@ export default function LobbyPage() {
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/95 to-transparent">
           <div className="max-w-lg mx-auto">
+            <p className="text-center text-purple-500 font-bold text-sm mb-2">🎮 {summaryText(pruebas, selected, rounds, order)}</p>
             <button onClick={() => startMatch({ pruebas: selected, rounds, order, solo: true })} disabled={!canStart}
               className="w-full font-display font-bold text-xl py-4 rounded-2xl bg-yellow-400 text-yellow-900 border-b-4 border-yellow-500 active:scale-95 transition-all shadow-lg disabled:opacity-40">
               🚀 ¡Empezar!
@@ -210,6 +223,7 @@ export default function LobbyPage() {
       {/* Botones de arranque */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/95 to-transparent">
         <div className="max-w-lg mx-auto space-y-2">
+          <p className="text-center text-purple-500 font-bold text-sm">🎮 {summaryText(pruebas, selected, rounds, order)}</p>
           <button onClick={() => startMatch({ pruebas: selected, rounds, order, solo: false })} disabled={!canStart || !isActive}
             className="w-full font-display font-bold text-xl py-4 rounded-2xl bg-purple-500 text-white border-b-4 border-purple-600 active:scale-95 transition-all shadow-lg disabled:opacity-40">
             🎉 Empezar partida{connectedCount > 0 ? ` (${connectedCount} jugador${connectedCount > 1 ? 'es' : ''})` : ''}
