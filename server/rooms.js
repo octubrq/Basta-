@@ -12,6 +12,8 @@ let game = {
     endMode: 'basta_5s',
     scrambleMinutes: 2,
     scrambleDifficulty: 'medium',
+    pistasDifficulty: 'medium',  // easy | medium | hard (Pistas Progresivas)
+    cadenaLetters: 1,            // 1 | 2 (Categoría en cadena: enlazar por N últimas letras)
   },
   match: null,          // partida en curso (la crea engine.js)
   categoryPool: { ...CATEGORY_POOL },

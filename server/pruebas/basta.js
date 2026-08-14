@@ -9,7 +9,7 @@ module.exports = {
   color: '#EC4899',
   icon: '🎯',
   minPlayers: 1,
-  instructionsSeconds: 8,
+  instructionsSeconds: 3,
   howToPlay: 'Sale una LETRA y varias categorías. Escribe en cada una una palabra que empiece por esa letra. El primero que las completa (puede dejar 1 vacía) grita ¡BASTA! y el resto tiene unos segundos para terminar.',
   howToScore: '10 puntos si tu respuesta es válida y única · 5 si otro puso lo mismo.',
   soloHowToScore: '10 puntos por cada respuesta válida.',

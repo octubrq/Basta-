@@ -101,6 +101,8 @@ io.on('connection', (socket) => {
     if (cfg.endMode) c.endMode = cfg.endMode;
     if (cfg.scrambleMinutes) c.scrambleMinutes = Math.min(10, Math.max(1, cfg.scrambleMinutes));
     if (cfg.scrambleDifficulty) c.scrambleDifficulty = cfg.scrambleDifficulty;
+    if (cfg.pistasDifficulty) c.pistasDifficulty = cfg.pistasDifficulty;
+    if (cfg.cadenaLetters) c.cadenaLetters = Math.min(2, Math.max(1, cfg.cadenaLetters));
     emitState();
   });
 

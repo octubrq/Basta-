@@ -115,6 +115,29 @@ function PruebaParams({ config, updateConfig }) {
           </div>
         </div>
       </div>
+
+      <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
+        <h3 className="font-display font-bold text-amber-600 mb-3">🔍 Pistas Progresivas</h3>
+        <label className="text-sm font-bold text-amber-500 block mb-2">Dificultad</label>
+        <div className="grid grid-cols-3 gap-1.5">
+          {[['easy', '🙂 Fácil'], ['medium', '😎 Media'], ['hard', '🤯 Difícil']].map(([k, v]) => (
+            <button key={k} onClick={() => updateConfig({ pistasDifficulty: k })}
+              className={`py-2 px-1 rounded-xl font-bold text-xs border-2 ${config.pistasDifficulty === k ? 'bg-amber-500 text-white border-amber-600' : 'bg-amber-50 text-amber-400 border-amber-200'}`}>{v}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-red-50 rounded-2xl p-4 border border-red-200">
+        <h3 className="font-display font-bold text-red-600 mb-3">🔗 Categoría en cadena</h3>
+        <label className="text-sm font-bold text-red-500 block mb-2">Encadenar por</label>
+        <div className="grid grid-cols-2 gap-2">
+          {[[1, 'Última letra'], [2, 'Dos últimas (adultos)']].map(([k, v]) => (
+            <button key={k} onClick={() => updateConfig({ cadenaLetters: k })}
+              className={`py-2.5 px-2 rounded-xl font-bold text-sm border-2 ${(config.cadenaLetters || 1) === k ? 'bg-red-500 text-white border-red-600' : 'bg-red-50 text-red-400 border-red-200'}`}>{v}</button>
+          ))}
+        </div>
+        <p className="text-red-400 text-xs mt-2">Cada palabra empieza por las últimas letras de la anterior. +5 de combo si coincide con las 3 últimas.</p>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 
-const REASON = { tiempo: 'se quedó sin tiempo', repetido: 'repitió', 'no vale': 'no valía' };
+const REASON = { tiempo: 'se quedó sin tiempo', repetido: 'repitió', 'no vale': 'no valía', letras: 'no encadenó' };
 
 export default function CadenaPage() {
   const { user } = useAuth();
@@ -79,6 +79,18 @@ export default function CadenaPage() {
               <span className="text-red-500 font-bold text-sm">❌ {note.playerName} eliminado — {REASON[note.reason] || note.reason}{note.word ? ` ("${note.word}")` : ''}</span>
             </div>
           )}
+          {note?.type === 'combo' && (
+            <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl px-3 py-2 text-center mb-2 animate-pop">
+              <span className="text-yellow-600 font-bold text-sm">🔥 ¡Combo de {note.playerName}! "{note.word}" +5</span>
+            </div>
+          )}
+
+          {/* Debe empezar por... */}
+          {step.link && (
+            <p className="text-center mb-2 font-display font-bold text-red-500">
+              Debe empezar por <span className="bg-red-500 text-white rounded-lg px-2 py-0.5">{step.link.letters}</span>
+            </p>
+          )}
 
           {/* Turno */}
           <div className="text-center mb-3">
@@ -104,8 +116,8 @@ export default function CadenaPage() {
             <p className="text-red-300 font-bold text-xs font-display mb-1">Ya dicho ({step.said.length})</p>
             <div className="flex gap-2 flex-wrap">
               {step.said.map((s, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-xl text-sm font-bold bg-white border-2 border-red-100 text-gray-700">
-                  {s.word} <span className="text-red-300 text-xs">· {s.by}</span>
+                <span key={i} className={`px-3 py-1.5 rounded-xl text-sm font-bold border-2 text-gray-700 ${s.combo ? 'bg-yellow-50 border-yellow-300' : 'bg-white border-red-100'}`}>
+                  {s.combo && '🔥'}{s.word} <span className="text-red-300 text-xs">· {s.by}</span>
                 </span>
               ))}
               {step.said.length === 0 && <span className="text-gray-300 font-display">Aún nada. ¡Empieza!</span>}

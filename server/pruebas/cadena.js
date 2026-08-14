@@ -29,10 +29,10 @@ module.exports = {
   color: '#EF4444',
   icon: '🔗',
   minPlayers: 1,
-  instructionsSeconds: 8,
-  howToPlay: 'Sale una categoría y vais diciendo ejemplos por turnos, sin repetir. 5 segundos por turno. Quien falla, repite o no llega a tiempo queda eliminado. ¡Gana el último en pie!',
-  howToScore: '20 puntos el último en pie, 10 el penúltimo.',
-  soloHowToScore: 'Aguanta todo lo que puedas: 3 puntos por cada acierto seguido.',
+  instructionsSeconds: 3,
+  howToPlay: 'Sale una categoría y vais diciendo ejemplos por turnos, sin repetir. Además, cada palabra debe empezar por las últimas letras de la anterior. 5 segundos por turno. Quien falla, repite o no encadena queda eliminado. ¡Gana el último en pie!',
+  howToScore: '20 puntos el último en pie, 10 el penúltimo. +5 de combo si encadenas con las 3 últimas letras.',
+  soloHowToScore: 'Aguanta todo lo que puedas: 3 puntos por cada acierto seguido (+5 de combo con 3 letras).',
 
   async startPlay(ctx) {
     const players = ctx.playerIds();
@@ -42,6 +42,7 @@ module.exports = {
       aliveOrder: [...players], currentIdx: 0, eliminated: [],
       roundScores: {}, turnSeq: 0, busy: false,
       solo: ctx.solo || players.length <= 1, streak: 0, note: { type: 'start' },
+      linkN: Math.min(2, Math.max(1, ctx.game.config.cadenaLetters || 1)), lastLink: '',
     };
     ctx.broadcast('round:play', { prueba: 'cadena', content: { category } });
     this.startTurn(ctx);
@@ -80,6 +81,8 @@ module.exports = {
         alive: rt.aliveOrder.map(id => ({ id, name: ctx.nameOf(id) })),
         eliminated: rt.eliminated, seconds: TURN_SECONDS,
         solo: rt.solo, streak: rt.streak, note: rt.note,
+        // Letras por las que debe empezar la siguiente palabra (null en la 1ª)
+        link: (rt.said.length > 0 && rt.lastLink) ? { n: rt.linkN, letters: rt.lastLink.slice(-rt.linkN).toUpperCase() } : null,
       },
     });
   },
@@ -95,16 +98,26 @@ module.exports = {
     rt.busy = true;
     ctx.clearTimers();
     const n = normalize(word);
+    const nl = n.replace(/\s+/g, ''); // sin espacios, para enlazar por letras
     if (!n) { rt.busy = false; this.startTurn(ctx); return; }
     if (rt.saidNorm.has(n)) return this.fail(ctx, pid, 'repetido', word);
+    // Debe empezar por las N últimas letras de la palabra anterior
+    if (rt.said.length > 0 && rt.lastLink) {
+      const req = rt.lastLink.slice(-rt.linkN);
+      if (req && !nl.startsWith(req)) return this.fail(ctx, pid, 'letras', word);
+    }
 
     const valid = await isValidMember(rt.category, word);
     if (String(rt.aliveOrder[rt.currentIdx]) !== currentPid) return; // cambió el estado mientras validábamos
     if (!valid) return this.fail(ctx, pid, 'no vale', word);
 
-    rt.said.push({ word, by: ctx.nameOf(pid) });
+    // Combo: si además coincide con las 3 últimas letras de la anterior → +5
+    const combo = !!(rt.lastLink && rt.lastLink.length >= 3 && nl.startsWith(rt.lastLink.slice(-3)));
+    if (combo) rt.roundScores[String(pid)] = (rt.roundScores[String(pid)] || 0) + 5;
+    rt.said.push({ word, by: ctx.nameOf(pid), combo });
     rt.saidNorm.add(n);
-    rt.note = { type: 'accepted', playerName: ctx.nameOf(pid), word };
+    rt.lastLink = nl;
+    rt.note = { type: combo ? 'combo' : 'accepted', playerName: ctx.nameOf(pid), word, combo };
     if (rt.solo) {
       rt.streak++;
       if (rt.streak >= SOLO_CAP) return this.finishSolo(ctx);

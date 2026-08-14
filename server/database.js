@@ -46,6 +46,13 @@ if (!existing) {
   console.log('👑 Admin "javier" created');
 }
 
+// Contraseña de solo por defecto = "1234" (para que no se olvide y sobreviva a
+// los redespliegues de Railway, donde la BD se recrea). El admin puede cambiarla.
+if (!getSetting('solo_password_hash')) {
+  setSetting('solo_password_hash', bcrypt.hashSync('1234', 10));
+  console.log('🔑 Contraseña de solo por defecto: 1234');
+}
+
 module.exports = db;
 module.exports.getSetting = getSetting;
 module.exports.setSetting = setSetting;

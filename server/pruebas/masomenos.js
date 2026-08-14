@@ -22,7 +22,7 @@ module.exports = {
   color: '#3B82F6',
   icon: '📊',
   minPlayers: 1,
-  instructionsSeconds: 8,
+  instructionsSeconds: 3,
   howToPlay: 'Cada pregunta tiene una respuesta que es un número. Escribe tu número y gana quien más se acerque.',
   howToScore: '20 puntos el más cercano, 15 el segundo y 10 el tercero. En cada pregunta.',
   soloHowToScore: 'Puntos según lo cerca que te quedes de la respuesta real.',

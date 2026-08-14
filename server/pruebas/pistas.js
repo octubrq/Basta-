@@ -21,15 +21,21 @@ module.exports = {
   color: '#F59E0B',
   icon: '🔍',
   minPlayers: 1,
-  instructionsSeconds: 8,
+  instructionsSeconds: 3,
   howToPlay: 'Hay que adivinar una incógnita. Salen pistas de una en una, de la más difícil a la más fácil. El primero que la adivina se lleva los puntos y cierra.',
   howToScore: 'Cuantas menos pistas necesites, más puntos: 20 con 1 pista, 15 con 2, 10 con 3, 5 con 4.',
   soloHowToScore: '20 puntos con 1 pista, 15 con 2, 10 con 3, 5 con 4.',
 
   async startPlay(ctx) {
     const rt = ctx.m.runtime = { items: [], idx: -1, clueNum: 1, solved: false, roundScores: {} };
+    const diff = ctx.game.config.pistasDifficulty || 'medium';
+    const DIFF = {
+      easy: 'FÁCIL: incógnitas muy conocidas y cotidianas (animales comunes, objetos de casa, comidas típicas). Las pistas, incluso la primera, deben ser bastante claras y directas.',
+      medium: 'MEDIA: incógnitas variadas y conocidas. La primera pista algo críptica, las últimas claras.',
+      hard: 'DIFÍCIL: incógnitas más específicas o rebuscadas (conceptos, personajes históricos, lugares menos obvios, objetos poco comunes). Las pistas deben ser sutiles e ingeniosas, evitando lo evidente hasta la última.',
+    };
     const text = await callClaude(
-      `Genera ${N_ITEMS} incógnitas para un juego de adivinar en español, para toda la familia. Cada incógnita es UNA palabra concreta y conocida (animal, objeto, lugar, comida, personaje...). Da 4 PISTAS ordenadas de la MÁS críptica y difícil (pista 1) a la MÁS obvia y fácil (pista 4). Las pistas NO pueden contener la palabra a adivinar ni derivados suyos. Devuelve SOLO un array JSON: [{"answer":"Elefante","aliases":["elefantes"],"clues":["pista dificil","pista media","pista facil","pista muy facil"]}]`,
+      `Genera ${N_ITEMS} incógnitas para un juego de adivinar en español, para toda la familia, con dificultad ${DIFF[diff] || DIFF.medium} Cada incógnita es UNA palabra concreta. Da 4 PISTAS ordenadas de la MÁS críptica y difícil (pista 1) a la MÁS obvia y fácil (pista 4). Las pistas NO pueden contener la palabra a adivinar ni derivados suyos. Devuelve SOLO un array JSON: [{"answer":"Elefante","aliases":["elefantes"],"clues":["pista dificil","pista media","pista facil","pista muy facil"]}]`,
       1500
     );
     let items = extractJSON(text);

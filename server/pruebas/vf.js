@@ -19,7 +19,7 @@ module.exports = {
   color: '#8B5CF6',
   icon: '⚖️',
   minPlayers: 1,
-  instructionsSeconds: 8,
+  instructionsSeconds: 3,
   howToPlay: 'Sale una afirmación curiosa. Vota si es VERDADERA o FALSA. ¡Todos a la vez!',
   howToScore: '10 puntos por acertar, y +5 extra si eres de los tres primeros en votar bien.',
   soloHowToScore: '10 puntos por acertar (+5 por rapidez).',

@@ -8,7 +8,7 @@ module.exports = {
   color: '#22C55E',
   icon: '🔤',
   minPlayers: 1,
-  instructionsSeconds: 8,
+  instructionsSeconds: 3,
   howToPlay: 'Aparecen palabras con las letras desordenadas. Escribe la palabra correcta lo más rápido que puedas. Van saliendo palabras hasta que se acaba el tiempo.',
   howToScore: '10 puntos por cada palabra que aciertes antes que los demás.',
   soloHowToScore: '10 puntos por cada palabra que aciertes.',
