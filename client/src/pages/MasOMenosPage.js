@@ -4,18 +4,21 @@ import { useGame } from '../context/GameContext';
 
 export default function MasOMenosPage() {
   const { user } = useAuth();
-  const { stepData, stepReveal, submitStep, scoreboard, adminPaused, adminPauseToggle, skipRound } = useGame();
+  const { gameState, stepData, stepReveal, submitStep, scoreboard, adminPaused, adminPauseToggle, skipRound } = useGame();
   const isAdmin = user?.role === 'admin';
+  const myProfile = gameState?.players?.find(p => String(p.id) === String(user?.id))?.profile;
+  const myPrivileged = myProfile === 'nino' || myProfile === 'mayor';
   const [value, setValue] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const inputRef = useRef(null);
   const step = stepData?.step;
 
-  // Nueva pregunta → reiniciar
+  // Nueva pregunta → reiniciar (con segundos extra si tengo ventaja)
   useEffect(() => {
     if (!step) return;
-    setValue(''); setSubmitted(false); setTimeLeft(step.seconds || 20);
+    const extra = myPrivileged ? (step.extraSeconds || 0) : 0;
+    setValue(''); setSubmitted(false); setTimeLeft((step.seconds || 20) + extra);
     setTimeout(() => inputRef.current?.focus(), 300);
   }, [step?.index]); // eslint-disable-line
 

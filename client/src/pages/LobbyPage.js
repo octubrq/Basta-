@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { PROFILES, profileIcon } from '../profiles';
 
 const END_MODES = {
   basta_immediate: '⚡ Ya', basta_5s: '⏱️ +5s', basta_10s: '⏱️ +10s',
@@ -138,6 +139,21 @@ function PruebaParams({ config, updateConfig }) {
         </div>
         <p className="text-red-400 text-xs mt-2">Cada palabra empieza por las últimas letras de la anterior. +5 de combo si coincide con las 3 últimas.</p>
       </div>
+
+      <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+        <h3 className="font-display font-bold text-blue-600 mb-1">🧒🧓 Hándicap por edad</h3>
+        <p className="text-blue-400 text-xs mb-3">Ventaja para los perfiles Niño y Mayor.</p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-bold text-blue-500">Ventaja de puntos: +{config.handicapPercent ?? 50}% (x{(1 + (config.handicapPercent ?? 50) / 100).toFixed(2)})</label>
+            <input type="range" min="0" max="100" step="10" value={config.handicapPercent ?? 50} onChange={e => updateConfig({ handicapPercent: +e.target.value })} className="w-full accent-blue-500" />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-blue-500">Segundos extra (pruebas a la vez): +{config.handicapSeconds ?? 5}s</label>
+            <input type="range" min="0" max="15" value={config.handicapSeconds ?? 5} onChange={e => updateConfig({ handicapSeconds: +e.target.value })} className="w-full accent-blue-500" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -158,7 +174,7 @@ function SoloPasswordSetter({ isSet, setSoloPassword }) {
 
 export default function LobbyPage() {
   const { user, logout } = useAuth();
-  const { gameState, activate, deactivate, updateConfig, startMatch, setSoloPassword } = useGame();
+  const { gameState, activate, deactivate, updateConfig, startMatch, setProfile, setSoloPassword } = useGame();
   const [showConfig, setShowConfig] = useState(false);
   const configRef = useRef(null);
   const toggleConfig = () => setShowConfig(v => {
@@ -188,7 +204,7 @@ export default function LobbyPage() {
       <div className="min-h-dvh p-4 bg-gradient-to-b from-pink-50 via-white to-blue-50">
         <Header user={user} logout={logout} />
         <div className="max-w-lg mx-auto">
-          <PlayersCard players={players} />
+          <PlayersCard players={players} isAdmin={isAdmin} setProfile={setProfile} />
         </div>
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white to-transparent">
           <p className="text-purple-300 text-center font-display text-lg animate-float">⏳ Esperando al admin...</p>
@@ -237,7 +253,7 @@ export default function LobbyPage() {
           </div>
         </div>
 
-        <PlayersCard players={players} />
+        <PlayersCard players={players} isAdmin={isAdmin} setProfile={setProfile} />
 
         <MatchConfig pruebas={pruebas} selected={selected} setSelected={setSelected} rounds={rounds} setRounds={setRounds} order={order} setOrder={setOrder} />
 
@@ -281,7 +297,7 @@ function Header({ user, logout, solo }) {
   );
 }
 
-function PlayersCard({ players }) {
+function PlayersCard({ players, isAdmin, setProfile }) {
   const connected = players.filter(p => p.connected);
   return (
     <div className="bg-white rounded-3xl p-5 shadow-md border-2 border-blue-100">
@@ -291,14 +307,25 @@ function PlayersCard({ players }) {
       ) : (
         <div className="space-y-2">
           {connected.map(p => (
-            <div key={p.id} className="flex items-center gap-3 p-3 rounded-2xl border-2 bg-gray-50 border-gray-100">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-display text-lg font-bold ${p.role === 'admin' ? 'bg-purple-200 text-purple-700' : 'bg-blue-200 text-blue-700'}`}>{p.name[0].toUpperCase()}</div>
-              <span className="font-bold text-gray-700 flex-1">{p.name}</span>
-              {p.role === 'admin' && <span className="bg-purple-100 text-purple-600 text-xs font-bold px-2 py-0.5 rounded-full">👑</span>}
+            <div key={p.id} className="p-3 rounded-2xl border-2 bg-gray-50 border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-display text-lg font-bold ${p.role === 'admin' ? 'bg-purple-200 text-purple-700' : 'bg-blue-200 text-blue-700'}`}>{p.name[0].toUpperCase()}</div>
+                <span className="font-bold text-gray-700 flex-1">{p.name} {profileIcon(p.profile)}</span>
+                {p.role === 'admin' && <span className="bg-purple-100 text-purple-600 text-xs font-bold px-2 py-0.5 rounded-full">👑</span>}
+              </div>
+              {isAdmin && (
+                <div className="flex gap-1.5 mt-2">
+                  {PROFILES.map(pr => (
+                    <button key={pr.key} onClick={() => setProfile(p.id, pr.key)}
+                      className={`flex-1 py-1.5 rounded-xl text-xs font-bold border-2 transition-all ${(p.profile || 'normal') === pr.key ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-200'}`}>{pr.label}</button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
+      {isAdmin && <p className="text-blue-300 text-xs mt-2 text-center">Niño y Mayor reciben ventaja de puntos (y algo más de tiempo)</p>}
     </div>
   );
 }

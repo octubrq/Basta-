@@ -47,18 +47,23 @@ module.exports = {
     rt.qIndex++;
     if (rt.qIndex >= rt.questions.length) return this.finishRound(ctx);
     rt.answers = {};
+    rt.qStart = Date.now();
+    const extra = ctx.extraSeconds();
     const q = rt.questions[rt.qIndex];
     ctx.broadcast('step:show', {
       prueba: 'masomenos',
-      step: { index: rt.qIndex, total: rt.questions.length, q: q.q, unit: q.unit || '', seconds: QUESTION_SECONDS },
+      step: { index: rt.qIndex, total: rt.questions.length, q: q.q, unit: q.unit || '', seconds: QUESTION_SECONDS, extraSeconds: extra },
     });
-    ctx.setTimer(() => this.reveal(ctx), QUESTION_SECONDS * 1000);
+    ctx.setTimer(() => this.reveal(ctx), (QUESTION_SECONDS + extra) * 1000);
   },
 
   onEvent(ctx, event, payload, playerId) {
     const rt = ctx.m.runtime;
     if (!rt || event !== 'step:answer') return;
     if (rt.qIndex < 0 || rt.qRevealed === rt.qIndex) return;
+    // Los no privilegiados solo pueden responder dentro del tiempo base; los de
+    // ventaja (niño/mayor) tienen sus segundos extra.
+    if (!ctx.isPrivileged(playerId) && rt.qStart && (Date.now() - rt.qStart) > QUESTION_SECONDS * 1000 + 800) return;
     const num = parseFloat(String(payload).replace(',', '.').replace(/[^0-9.\-]/g, ''));
     if (isNaN(num)) return;
     rt.answers[String(playerId)] = num;

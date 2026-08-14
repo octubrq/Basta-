@@ -30,10 +30,16 @@ function publicStandings() {
     .sort((a, b) => b.totalScore - a.totalScore);
 }
 
-// Marcador provisional durante el juego (totales confirmados + lo ganado en la ronda).
+// Hándicap por edad: niño/mayor reciben multiplicador de puntos.
+function isPrivileged(p) { return !!p && (p.profile === 'nino' || p.profile === 'mayor'); }
+function handicapMult(p) { return isPrivileged(p) ? 1 + (game.config.handicapPercent || 0) / 100 : 1; }
+function boostedScore(pid, pts) { return Math.round((pts || 0) * handicapMult(game.players.get(String(pid)))); }
+function anyPrivileged() { return matchPlayers().some(isPrivileged); }
+
+// Marcador provisional durante el juego (totales confirmados + lo ganado en la ronda, con hándicap).
 function liveStandings(roundScores) {
   return matchPlayers()
-    .map(p => ({ id: p.id, name: p.name, totalScore: p.totalScore + (roundScores[String(p.id)] || 0), connected: p.connected }))
+    .map(p => ({ id: p.id, name: p.name, profile: p.profile || 'normal', totalScore: p.totalScore + boostedScore(p.id, roundScores[String(p.id)] || 0), connected: p.connected }))
     .sort((a, b) => b.totalScore - a.totalScore);
 }
 
@@ -93,6 +99,9 @@ function ctx() {
     clearTimers: clearAllTimers,
     finish: finishRound,
     emitLiveStandings: (roundScores) => ioRef.emit('scoreboard:update', liveStandings(roundScores)),
+    // Hándicap: privilegio por jugador y segundos extra en pruebas simultáneas
+    isPrivileged: (pid) => isPrivileged(game.players.get(String(pid))),
+    extraSeconds: () => (anyPrivileged() ? (game.config.handicapSeconds || 0) : 0),
   };
 }
 
@@ -207,13 +216,15 @@ function finishRound(result) {
   const m = game.match;
   if (!m || ['reveal', 'standings', 'finished'].includes(m.state)) return;
   clearAllTimers();
-  const roundScores = result.roundScores || {};
+  // Aplicar hándicap (multiplicador niño/mayor) a lo ganado en la ronda.
+  const roundScores = {};
+  for (const [pid, pts] of Object.entries(result.roundScores || {})) roundScores[pid] = boostedScore(pid, pts);
   for (const [pid, pts] of Object.entries(roundScores)) {
     const p = game.players.get(String(pid));
     if (p) p.totalScore += pts;
   }
   const podium = matchPlayers()
-    .map(p => ({ id: p.id, name: p.name, roundScore: roundScores[String(p.id)] || 0 }))
+    .map(p => ({ id: p.id, name: p.name, profile: p.profile || 'normal', roundScore: roundScores[String(p.id)] || 0 }))
     .sort((a, b) => b.roundScore - a.roundScore)
     .slice(0, 3);
 
@@ -265,7 +276,20 @@ function finishMatch() {
   m.state = 'finished';
   clearAllTimers();
   clearInterval(m.instrInterval); m.instrInterval = null;
-  ioRef.emit('match:finished', { mode: m.mode, solo: m.mode === 'solo', standings: publicStandings() });
+  const payload = { mode: m.mode, solo: m.mode === 'solo', standings: publicStandings() };
+
+  // Récord personal en modo solo (guardado en BD).
+  if (m.mode === 'solo' && m.starterId) {
+    const db = require('./database');
+    const pid = String(m.starterId);
+    const score = game.players.get(pid)?.totalScore || 0;
+    const prev = parseInt(db.getSetting(`record_${pid}`) || '0', 10);
+    const isNew = score > prev;
+    if (isNew) db.setSetting(`record_${pid}`, String(score));
+    payload.record = { score, previous: prev, best: Math.max(score, prev), isNew };
+  }
+
+  ioRef.emit('match:finished', payload);
 }
 
 function resetMatch() {

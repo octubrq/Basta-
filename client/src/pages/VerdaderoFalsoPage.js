@@ -4,8 +4,10 @@ import { useGame } from '../context/GameContext';
 
 export default function VerdaderoFalsoPage() {
   const { user } = useAuth();
-  const { stepData, stepReveal, submitStep, scoreboard, adminPaused, adminPauseToggle, skipRound } = useGame();
+  const { gameState, stepData, stepReveal, submitStep, scoreboard, adminPaused, adminPauseToggle, skipRound } = useGame();
   const isAdmin = user?.role === 'admin';
+  const myProfile = gameState?.players?.find(p => String(p.id) === String(user?.id))?.profile;
+  const myPrivileged = myProfile === 'nino' || myProfile === 'mayor';
   const [voted, setVoted] = useState(null); // true | false | null
   const [timeLeft, setTimeLeft] = useState(0);
   const step = stepData?.step;
@@ -13,7 +15,8 @@ export default function VerdaderoFalsoPage() {
 
   useEffect(() => {
     if (!step) return;
-    setVoted(null); setTimeLeft(step.seconds || 15);
+    const extra = myPrivileged ? (step.extraSeconds || 0) : 0;
+    setVoted(null); setTimeLeft((step.seconds || 15) + extra);
   }, [step?.index]); // eslint-disable-line
 
   useEffect(() => {

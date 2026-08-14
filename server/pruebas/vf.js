@@ -44,9 +44,11 @@ module.exports = {
     rt.idx++;
     if (rt.idx >= rt.items.length) return this.finishRound(ctx);
     rt.votes = {}; rt.order = []; rt.revealed = false;
+    rt.qStart = Date.now();
+    const extra = ctx.extraSeconds();
     const it = rt.items[rt.idx];
-    ctx.broadcast('step:show', { prueba: 'vf', step: { index: rt.idx, total: rt.items.length, statement: it.statement, seconds: VOTE_SECONDS } });
-    ctx.setTimer(() => this.reveal(ctx), VOTE_SECONDS * 1000);
+    ctx.broadcast('step:show', { prueba: 'vf', step: { index: rt.idx, total: rt.items.length, statement: it.statement, seconds: VOTE_SECONDS, extraSeconds: extra } });
+    ctx.setTimer(() => this.reveal(ctx), (VOTE_SECONDS + extra) * 1000);
   },
 
   onEvent(ctx, event, payload, playerId) {
@@ -54,6 +56,8 @@ module.exports = {
     if (!rt || event !== 'step:answer' || rt.revealed) return;
     const pid = String(playerId);
     if (rt.votes[pid] !== undefined) return; // ya votó
+    // No privilegiados solo dentro del tiempo base; niño/mayor tienen extra
+    if (!ctx.isPrivileged(pid) && rt.qStart && (Date.now() - rt.qStart) > VOTE_SECONDS * 1000 + 800) return;
     rt.votes[pid] = (payload === true || payload === 'V' || payload === 'v' || payload === 'true');
     rt.order.push(pid);
     if (ctx.playerIds().every(id => rt.votes[String(id)] !== undefined)) this.reveal(ctx);

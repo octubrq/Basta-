@@ -183,6 +183,7 @@ export function GameProvider({ children }) {
     activate: () => emit('admin:activate'),
     deactivate: () => emit('admin:deactivate'),
     updateConfig: (c) => emit('admin:config', c),
+    setProfile: (playerId, profile) => emit('admin:set_profile', { playerId, profile }),
     setSoloPassword: (password) => emit('admin:set_solo_password', { password }),
     // partida
     startMatch: (cfg) => emit('match:start', cfg),

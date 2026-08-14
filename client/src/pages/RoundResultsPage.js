@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { profileIcon } from '../profiles';
 
 const S = {
   unique: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-500' },
@@ -94,7 +95,7 @@ export default function RoundResultsPage() {
               String(s.id) === String(user?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-100'
             }`}>
               <span className="font-display text-lg font-bold w-7 text-center">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
-              <span className="text-gray-800 font-bold flex-1 truncate">{s.name}</span>
+              <span className="text-gray-800 font-bold flex-1 truncate">{s.name} {profileIcon(s.profile)}</span>
               <Arrow delta={s.delta} />
               <span className="font-display text-purple-500 font-bold w-10 text-right">{s.totalScore}</span>
             </div>

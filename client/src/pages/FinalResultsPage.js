@@ -1,12 +1,14 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { profileIcon } from '../profiles';
 
 export default function FinalResultsPage() {
   const { user } = useAuth();
   const { finalResult, resetToLobby, resetMatch } = useGame();
   const standings = finalResult?.standings || [];
   const solo = finalResult?.solo;
+  const record = finalResult?.record;
   const winner = standings[0];
   const isWinner = winner && String(winner.id) === String(user?.id);
   const myPos = standings.findIndex(s => String(s.id) === String(user?.id)) + 1;
@@ -23,6 +25,9 @@ export default function FinalResultsPage() {
           {solo ? '🎉 ¡Terminado!' : isWinner ? '🎉 ¡Victoria!' : '🏁 ¡Fin!'}
         </h1>
         {solo && winner && <p className="text-purple-500 font-display text-2xl font-bold mt-2">{winner.totalScore} puntos</p>}
+        {solo && record && (record.isNew
+          ? <p className="font-display text-xl font-bold text-yellow-500 mt-2 animate-bounce-in">🏆 ¡Nuevo récord!{record.previous > 0 ? ` (antes ${record.previous})` : ''}</p>
+          : <p className="text-gray-400 font-bold mt-2">Tu récord sigue en {record.best} pts</p>)}
         {!solo && myPos > 0 && <p className="text-purple-400 font-body mt-2">Posición #{myPos}</p>}
       </div>
 
@@ -65,7 +70,7 @@ export default function FinalResultsPage() {
               String(s.id) === String(user?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-100'
             }`}>
               <span className="font-display text-lg font-bold w-8 text-center">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</span>
-              <span className="text-gray-800 font-bold flex-1">{s.name}</span>
+              <span className="text-gray-800 font-bold flex-1">{s.name} {profileIcon(s.profile)}</span>
               <span className="font-display text-purple-500 font-bold text-lg">{s.totalScore}</span>
             </div>
           ))}

@@ -103,7 +103,16 @@ io.on('connection', (socket) => {
     if (cfg.scrambleDifficulty) c.scrambleDifficulty = cfg.scrambleDifficulty;
     if (cfg.pistasDifficulty) c.pistasDifficulty = cfg.pistasDifficulty;
     if (cfg.cadenaLetters) c.cadenaLetters = Math.min(2, Math.max(1, cfg.cadenaLetters));
+    if (cfg.handicapPercent !== undefined) c.handicapPercent = Math.min(100, Math.max(0, cfg.handicapPercent));
+    if (cfg.handicapSeconds !== undefined) c.handicapSeconds = Math.min(15, Math.max(0, cfg.handicapSeconds));
     emitState();
+  });
+
+  socket.on('admin:set_profile', ({ playerId, profile } = {}) => {
+    if (u.role !== 'admin') return;
+    if (!['nino', 'normal', 'mayor'].includes(profile)) return;
+    const p = G.game.players.get(String(playerId));
+    if (p) { p.profile = profile; emitState(); }
   });
 
   socket.on('admin:set_solo_password', ({ password } = {}) => {
