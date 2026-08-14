@@ -14,11 +14,12 @@ import ScramblePage from './pages/ScramblePage';
 import MasOMenosPage from './pages/MasOMenosPage';
 import PistasPage from './pages/PistasPage';
 import VerdaderoFalsoPage from './pages/VerdaderoFalsoPage';
+import CadenaPage from './pages/CadenaPage';
 import RoundResultsPage from './pages/RoundResultsPage';
 import FinalResultsPage from './pages/FinalResultsPage';
 
 // Página de juego según la prueba activa.
-const PLAY_PAGES = { basta: GamePage, scramble: ScramblePage, masomenos: MasOMenosPage, pistas: PistasPage, vf: VerdaderoFalsoPage };
+const PLAY_PAGES = { basta: GamePage, scramble: ScramblePage, masomenos: MasOMenosPage, pistas: PistasPage, vf: VerdaderoFalsoPage, cadena: CadenaPage };
 
 function ExitButton() {
   const { user } = useAuth();
