@@ -1,5 +1,6 @@
 const { callClaude } = require('../aiValidator');
 const { normalize } = require('../validator');
+const db = require('../database');
 
 // Categoría en cadena: por turnos, sin repetir. Quien falla/repite/no llega a
 // tiempo queda eliminado. Gana el último en pie. En solo, cuenta la racha.
@@ -37,6 +38,7 @@ module.exports = {
   async startPlay(ctx) {
     const players = ctx.playerIds();
     const category = await this.pickCategory();
+    db.pushUsed('cadena', [category]);
     const rt = ctx.m.runtime = {
       category, said: [], saidNorm: new Set(),
       aliveOrder: [...players], currentIdx: 0, eliminated: [],
@@ -49,8 +51,10 @@ module.exports = {
   },
 
   async pickCategory() {
+    const used = db.getUsed('cadena');
+    const avoid = used.length ? ` No uses ninguna de estas que ya han salido: ${used.slice(0, 25).join(', ')}.` : '';
     const txt = await callClaude(
-      'Dame UNA categoría sencilla y divertida para un juego de nombrar cosas en cadena, en español (como "Frutas", "Países", "Animales"). Debe tener muchísimos ejemplos posibles. Responde SOLO con el nombre de la categoría, sin nada más.',
+      `Dame UNA categoría sencilla y divertida para un juego de nombrar cosas en cadena, en español (como "Frutas", "Países", "Animales"). Debe tener muchísimos ejemplos posibles.${avoid} Responde SOLO con el nombre de la categoría, sin nada más.`,
       20
     );
     if (txt) {

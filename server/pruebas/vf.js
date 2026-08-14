@@ -1,4 +1,5 @@
 const { callClaude, extractJSON } = require('../aiValidator');
+const db = require('../database');
 
 // Verdadero o Falso: afirmación curiosa, todos votan a la vez.
 const VOTE_SECONDS = 15;
@@ -26,8 +27,10 @@ module.exports = {
 
   async startPlay(ctx) {
     const rt = ctx.m.runtime = { items: [], idx: -1, roundScores: {}, votes: {}, order: [], revealed: false };
+    const used = db.getUsed('vf');
+    const avoid = used.length ? `\nMUY IMPORTANTE: NO repitas ninguna de estas afirmaciones que ya han salido: ${used.slice(0, 30).join(' | ')}. Haz otras claramente distintas.` : '';
     const text = await callClaude(
-      `Genera ${N} afirmaciones curiosas de cultura general en español para un juego de Verdadero o Falso familiar. Mezcla verdaderas y falsas; que no sean ni obvias ni imposibles. Añade una explicación breve (una sola frase). Devuelve SOLO un array JSON: [{"statement":"...","answer":true,"explanation":"..."}]`,
+      `Genera ${N} afirmaciones curiosas de cultura general en español para un juego de Verdadero o Falso familiar. Mezcla verdaderas y falsas; que no sean ni obvias ni imposibles. Añade una explicación breve (una sola frase).${avoid} Devuelve SOLO un array JSON: [{"statement":"...","answer":true,"explanation":"..."}]`,
       1200
     );
     let items = extractJSON(text);
@@ -35,6 +38,7 @@ module.exports = {
     items = (items || []).filter(x => x && typeof x.statement === 'string' && typeof x.answer === 'boolean');
     if (items.length < 1) items = [...FALLBACK].sort(() => Math.random() - 0.5).slice(0, N);
     rt.items = items.slice(0, N).map(x => ({ statement: String(x.statement), answer: !!x.answer, explanation: String(x.explanation || '') }));
+    db.pushUsed('vf', rt.items.map(x => x.statement));
     ctx.broadcast('round:play', { prueba: 'vf', content: { total: rt.items.length } });
     this.nextItem(ctx);
   },

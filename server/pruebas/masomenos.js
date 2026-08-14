@@ -1,4 +1,5 @@
 const { callClaude, extractJSON } = require('../aiValidator');
+const db = require('../database');
 
 // Más o menos: preguntas con respuesta numérica. Gana quien más se acerca.
 // Una sola llamada a la IA por ronda devuelve TODAS las preguntas.
@@ -29,8 +30,10 @@ module.exports = {
 
   async startPlay(ctx) {
     const rt = ctx.m.runtime = { questions: [], qIndex: -1, answers: {}, roundScores: {}, qRevealed: -2 };
+    const used = db.getUsed('masomenos');
+    const avoid = used.length ? `\nMUY IMPORTANTE: NO repitas ninguna de estas preguntas que ya han salido: ${used.slice(0, 35).join(' | ')}. Haz preguntas claramente distintas.` : '';
     const text = await callClaude(
-      `Genera ${N_QUESTIONS} preguntas de cultura general para un juego familiar en español, cada una con una respuesta que sea un NÚMERO objetivo y verificable (distancias, pesos, alturas, cantidades, años...). Variadas y curiosas, ni demasiado fáciles ni imposibles. La respuesta debe ser un número entero razonable, SIN separadores de miles. Devuelve SOLO un array JSON: [{"q":"¿...?","answer":123,"unit":"km"}]`,
+      `Genera ${N_QUESTIONS} preguntas de cultura general para un juego familiar en español, cada una con una respuesta que sea un NÚMERO objetivo y verificable (distancias, pesos, alturas, cantidades, años...). Variadas y curiosas, ni demasiado fáciles ni imposibles. La respuesta debe ser un número entero razonable, SIN separadores de miles.${avoid} Devuelve SOLO un array JSON: [{"q":"¿...?","answer":123,"unit":"km"}]`,
       800
     );
     let qs = extractJSON(text);
@@ -38,6 +41,7 @@ module.exports = {
     qs = (qs || []).filter(x => x && typeof x.answer === 'number' && isFinite(x.answer) && typeof x.q === 'string');
     if (qs.length < 2) qs = [...FALLBACK].sort(() => Math.random() - 0.5).slice(0, N_QUESTIONS);
     rt.questions = qs.slice(0, N_QUESTIONS);
+    db.pushUsed('masomenos', rt.questions.map(q => q.q));
     ctx.broadcast('round:play', { prueba: 'masomenos', content: { total: rt.questions.length } });
     this.nextQuestion(ctx);
   },

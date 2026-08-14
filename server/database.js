@@ -37,6 +37,22 @@ function setSetting(key, value) {
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, value);
 }
 
+// Memoria anti-repetición: lista de lo ya usado por prueba (para no repetir preguntas).
+function getUsed(prueba) {
+  try { return JSON.parse(getSetting('used_' + prueba) || '[]'); } catch { return []; }
+}
+function pushUsed(prueba, items, cap = 80) {
+  if (!Array.isArray(items) || !items.length) return;
+  const next = [...items.map(String), ...getUsed(prueba)];
+  const seen = new Set(); const out = [];
+  for (const x of next) {
+    const k = x.toLowerCase().trim();
+    if (k && !seen.has(k)) { seen.add(k); out.push(x); }
+    if (out.length >= cap) break;
+  }
+  setSetting('used_' + prueba, JSON.stringify(out));
+}
+
 // Create default admin if not exists
 const bcrypt = require('bcryptjs');
 const existing = db.prepare('SELECT id FROM admin WHERE username = ?').get('javier');
@@ -56,3 +72,5 @@ if (!getSetting('solo_password_hash')) {
 module.exports = db;
 module.exports.getSetting = getSetting;
 module.exports.setSetting = setSetting;
+module.exports.getUsed = getUsed;
+module.exports.pushUsed = pushUsed;

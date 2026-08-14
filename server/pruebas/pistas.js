@@ -1,5 +1,6 @@
 const { callClaude, extractJSON } = require('../aiValidator');
 const { normalize, areSame } = require('../validator');
+const db = require('../database');
 
 // Pistas Progresivas: adivinar una incógnita con pistas que van de difícil a fácil.
 // Una llamada a la IA por ronda genera varias incógnitas con sus 4 pistas.
@@ -34,8 +35,10 @@ module.exports = {
       medium: 'MEDIA: incógnitas variadas y conocidas. La primera pista algo críptica, las últimas claras.',
       hard: 'DIFÍCIL: incógnitas más específicas o rebuscadas (conceptos, personajes históricos, lugares menos obvios, objetos poco comunes). Las pistas deben ser sutiles e ingeniosas, evitando lo evidente hasta la última.',
     };
+    const used = db.getUsed('pistas');
+    const avoid = used.length ? `\nMUY IMPORTANTE: NO uses ninguna de estas incógnitas que ya han salido: ${used.slice(0, 40).join(', ')}. Elige palabras claramente distintas.` : '';
     const text = await callClaude(
-      `Genera ${N_ITEMS} incógnitas para un juego de adivinar en español, para toda la familia, con dificultad ${DIFF[diff] || DIFF.medium} Cada incógnita es UNA palabra concreta. Da 4 PISTAS ordenadas de la MÁS críptica y difícil (pista 1) a la MÁS obvia y fácil (pista 4). Las pistas NO pueden contener la palabra a adivinar ni derivados suyos. Devuelve SOLO un array JSON: [{"answer":"Elefante","aliases":["elefantes"],"clues":["pista dificil","pista media","pista facil","pista muy facil"]}]`,
+      `Genera ${N_ITEMS} incógnitas para un juego de adivinar en español, para toda la familia, con dificultad ${DIFF[diff] || DIFF.medium} Cada incógnita es UNA palabra concreta. Da 4 PISTAS ordenadas de la MÁS críptica y difícil (pista 1) a la MÁS obvia y fácil (pista 4). Las pistas NO pueden contener la palabra a adivinar ni derivados suyos.${avoid} Devuelve SOLO un array JSON: [{"answer":"Elefante","aliases":["elefantes"],"clues":["pista dificil","pista media","pista facil","pista muy facil"]}]`,
       1500
     );
     let items = extractJSON(text);
@@ -47,6 +50,7 @@ module.exports = {
       aliases: Array.isArray(x.aliases) ? x.aliases.map(String) : [],
       clues: x.clues.slice(0, 4).map(String),
     }));
+    db.pushUsed('pistas', rt.items.map(x => x.answer));
     ctx.broadcast('round:play', { prueba: 'pistas', content: { total: rt.items.length } });
     this.nextItem(ctx);
   },

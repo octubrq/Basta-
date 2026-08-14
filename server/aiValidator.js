@@ -132,7 +132,10 @@ async function generateScrambledWords(count, difficulty = 'medium') {
   }
 
   const promptTemplate = DIFFICULTY_PROMPTS[difficulty] || DIFFICULTY_PROMPTS.medium;
-  const prompt = promptTemplate.replace('{count}', count);
+  let prompt = promptTemplate.replace('{count}', count);
+  const db = require('./database');
+  const used = db.getUsed('scramble');
+  if (used.length) prompt += `\nNo repitas ninguna de estas palabras que ya han salido: ${used.slice(0, 50).join(', ')}.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -149,6 +152,7 @@ async function generateScrambledWords(count, difficulty = 'medium') {
     const match = text.match(/\[[\s\S]*\]/);
     if (match) {
       const words = JSON.parse(match[0]);
+      db.pushUsed('scramble', words);
       console.log(`🔤 Generated ${words.length} ${difficulty} words`);
       return words;
     }
