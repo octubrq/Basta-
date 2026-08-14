@@ -90,6 +90,7 @@ module.exports = {
     ctx.clearTimers();
     const points = POINTS[rt.clueNum - 1] || 0;
     rt.roundScores[String(playerId)] = (rt.roundScores[String(playerId)] || 0) + points;
+    ctx.recordStat(playerId, 'speed');
     ctx.broadcast('step:reveal', {
       prueba: 'pistas',
       reveal: { answer: item.answer, solvedBy: ctx.nameOf(playerId), solvedById: String(playerId), points, clueNum: rt.clueNum },

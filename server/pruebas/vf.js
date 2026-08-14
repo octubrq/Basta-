@@ -76,7 +76,7 @@ module.exports = {
       const vote = rt.votes[pid];
       const correct = vote !== undefined && vote === it.answer;
       let points = 0;
-      if (correct) { points = 10; if (first3.has(pid)) points += 5; }
+      if (correct) { points = 10; if (first3.has(pid)) { points += 5; ctx.recordStat(pid, 'speed'); } }
       if (points > 0) rt.roundScores[pid] = (rt.roundScores[pid] || 0) + points;
       results.push({ id: pid, name: ctx.nameOf(id), vote: vote === undefined ? null : vote, correct, points });
     }

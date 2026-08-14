@@ -102,6 +102,11 @@ function ctx() {
     // Hándicap: privilegio por jugador y segundos extra en pruebas simultáneas
     isPrivileged: (pid) => isPrivileged(game.players.get(String(pid))),
     extraSeconds: () => (anyPrivileged() ? (game.config.handicapSeconds || 0) : 0),
+    // Estadísticas para los premios tontos del final
+    recordStat: (pid, key, amt = 1) => {
+      const s = m.stats[String(pid)] || (m.stats[String(pid)] = {});
+      s[key] = (s[key] || 0) + amt;
+    },
   };
 }
 
@@ -140,7 +145,7 @@ function startMatch(cfg, mode, starterId) {
     roundIndex: 0, state: 'idle',
     currentPrueba: null, content: null, runtime: {},
     usedLetters: [], pauses: {}, adminPaused: false,
-    prevRanking: [], lastRoundResult: null,
+    prevRanking: [], lastRoundResult: null, stats: {},
     _timerMeta: [], instrInterval: null, instrRemaining: 0,
   };
   beginRound();
@@ -271,12 +276,40 @@ function advance() {
   beginRound();
 }
 
+// Premios tontos: que todo el mundo se lleve algo.
+function computeAwards() {
+  const m = game.match;
+  const stats = m.stats || {};
+  const players = matchPlayers();
+  const awards = [];
+  const given = new Set();
+  const give = (pid, emoji, title) => {
+    pid = pid && String(pid);
+    if (pid && !given.has(pid) && game.players.get(pid)) { given.add(pid); awards.push({ playerId: pid, name: nameOf(pid), emoji, title }); }
+  };
+  const topBy = (key) => {
+    let best = null, bestV = 0;
+    for (const p of players) { const v = stats[String(p.id)]?.[key] || 0; if (v > bestV) { bestV = v; best = String(p.id); } }
+    return best;
+  };
+  const ranked = publicStandings();
+  if (ranked[0]) give(ranked[0].id, '🏆', 'Campeón');
+  give(topBy('speed'), '⚡', 'El más rápido');
+  give(topBy('combos'), '🔥', 'El rey del combo');
+  give(topBy('closeMiss'), '🎯', 'El más cerca sin ganar');
+  const FB = [['😎', 'El más tranquilo'], ['🎨', 'El más original'], ['🍀', 'El más suertudo'], ['🌟', 'La estrella sorpresa'], ['🤝', 'El buen perdedor'], ['🎉', 'El alma de la fiesta']];
+  let fi = 0;
+  for (const p of players) if (!given.has(String(p.id))) give(p.id, FB[fi % FB.length][0], FB[fi++ % FB.length][1]);
+  return awards;
+}
+
 function finishMatch() {
   const m = game.match;
   m.state = 'finished';
   clearAllTimers();
   clearInterval(m.instrInterval); m.instrInterval = null;
   const payload = { mode: m.mode, solo: m.mode === 'solo', standings: publicStandings() };
+  if (m.mode !== 'solo') payload.awards = computeAwards();
 
   // Récord personal en modo solo (guardado en BD).
   if (m.mode === 'solo' && m.starterId) {

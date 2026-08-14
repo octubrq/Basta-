@@ -113,7 +113,7 @@ module.exports = {
 
     // Combo: si además coincide con las 3 últimas letras de la anterior → +5
     const combo = !!(rt.lastLink && rt.lastLink.length >= 3 && nl.startsWith(rt.lastLink.slice(-3)));
-    if (combo) rt.roundScores[String(pid)] = (rt.roundScores[String(pid)] || 0) + 5;
+    if (combo) { rt.roundScores[String(pid)] = (rt.roundScores[String(pid)] || 0) + 5; ctx.recordStat(pid, 'combos'); }
     rt.said.push({ word, by: ctx.nameOf(pid), combo });
     rt.saidNorm.add(n);
     rt.lastLink = nl;

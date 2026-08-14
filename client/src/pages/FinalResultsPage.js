@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { profileIcon } from '../profiles';
+import { sfx } from '../sound';
 
 export default function FinalResultsPage() {
   const { user } = useAuth();
   const { finalResult, resetToLobby, resetMatch } = useGame();
+  useEffect(() => { sfx.fanfare(); }, []);
   const standings = finalResult?.standings || [];
   const solo = finalResult?.solo;
   const record = finalResult?.record;
@@ -76,6 +78,25 @@ export default function FinalResultsPage() {
           ))}
         </div>
       </div>
+
+      {!solo && finalResult?.awards?.length > 0 && (
+        <div className="w-full max-w-lg px-4 mt-4">
+          <div className="bg-white rounded-3xl p-4 shadow-md border-2 border-yellow-200">
+            <h3 className="font-display text-yellow-600 font-bold mb-3">🎁 Premios para todos</h3>
+            <div className="space-y-2">
+              {finalResult.awards.map(a => (
+                <div key={a.playerId} className={`flex items-center gap-3 rounded-xl px-3 py-2 border-2 ${String(a.playerId) === String(user?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-100'}`}>
+                  <span className="text-2xl">{a.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display font-bold text-gray-700 leading-tight">{a.title}</p>
+                    <p className="text-gray-400 text-sm truncate">{a.name}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent">
         <div className="max-w-lg mx-auto">

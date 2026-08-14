@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { profileIcon } from '../profiles';
+import { sfx } from '../sound';
 
 const S = {
   unique: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-500' },
@@ -24,6 +25,7 @@ export default function RoundResultsPage() {
   const { user } = useAuth();
   const { roundResult, nextRound, resetMatch } = useGame();
   const [showDetail, setShowDetail] = useState(false);
+  useEffect(() => { sfx.pop(); }, []);
   if (!roundResult) return null;
   const { prueba, reveal, podium = [], standings = [], roundIndex, totalRounds, isLast, solo } = roundResult;
   const isAdmin = user?.role === 'admin';

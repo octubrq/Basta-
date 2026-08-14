@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
+import { isMuted, toggleMuted } from './sound';
 import { SocketProvider, useSocket } from './context/SocketContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { GameProvider, useGame } from './context/GameContext';
@@ -39,6 +40,16 @@ function ExitButton() {
     }}
     className="fixed top-3 left-3 z-50 bg-black/30 hover:bg-nintendo-red/80 backdrop-blur-sm text-white/70 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full transition-all border border-white/10">
       ✕ Salir
+    </button>
+  );
+}
+
+function MuteButton() {
+  const [muted, setMutedState] = useState(isMuted());
+  return (
+    <button onClick={() => setMutedState(toggleMuted())} title={muted ? 'Activar sonido' : 'Silenciar'}
+      className="fixed top-3 right-3 z-50 bg-white/80 hover:bg-white backdrop-blur-sm text-lg px-2.5 py-1.5 rounded-full shadow-md border-2 border-purple-100 active:scale-90 transition-all">
+      {muted ? '🔇' : '🔊'}
     </button>
   );
 }
@@ -90,7 +101,7 @@ function AppRouter() {
     default: page = <LobbyPage />;
   }
 
-  return <><ExitButton />{page}</>;
+  return <><ExitButton /><MuteButton />{page}</>;
 }
 
 export default function App() {

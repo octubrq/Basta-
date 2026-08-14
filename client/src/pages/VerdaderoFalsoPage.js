@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { sfx } from '../sound';
 
 export default function VerdaderoFalsoPage() {
   const { user } = useAuth();
@@ -27,6 +28,7 @@ export default function VerdaderoFalsoPage() {
 
   const vote = (v) => { if (voted !== null || reveal) return; setVoted(v); submitStep(v); };
   const myResult = reveal?.results?.find(r => String(r.id) === String(user?.id));
+  useEffect(() => { if (reveal) { if (myResult?.correct) sfx.correct(); else sfx.wrong(); } }, [reveal]); // eslint-disable-line
 
   return (
     <div className="min-h-dvh flex flex-col bg-gradient-to-b from-purple-50 via-white to-blue-50">

@@ -42,6 +42,7 @@ module.exports = {
     const norm = String(payload || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     if (norm !== rt.current) return;
     rt.scores[playerId] = (rt.scores[playerId] || 0) + 10;
+    ctx.recordStat(playerId, 'speed');
     rt.log.push({ word: rt.current, winner: ctx.nameOf(playerId), winnerId: playerId });
     ctx.broadcast('scramble:correct', { playerId, playerName: ctx.nameOf(playerId), word: rt.current });
     ctx.emitLiveStandings(rt.scores); // marcador provisional (se confirma al acabar la ronda)

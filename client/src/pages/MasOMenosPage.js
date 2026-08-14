@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { sfx } from '../sound';
 
 export default function MasOMenosPage() {
   const { user } = useAuth();
@@ -36,6 +37,11 @@ export default function MasOMenosPage() {
   };
 
   const reveal = stepReveal?.reveal;
+  useEffect(() => {
+    if (!reveal) return;
+    const mine = reveal.results?.find(r => r.name === user?.name);
+    if (mine && mine.points > 0) sfx.correct(); else sfx.pop();
+  }, [reveal]); // eslint-disable-line
 
   return (
     <div className="min-h-dvh flex flex-col bg-gradient-to-b from-blue-50 via-white to-purple-50">

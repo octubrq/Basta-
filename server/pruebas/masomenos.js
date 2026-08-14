@@ -82,6 +82,7 @@ module.exports = {
       return { id: String(id), name: ctx.nameOf(id), value: v, diff: v === undefined ? Infinity : Math.abs(v - q.answer) };
     });
     const ranked = entries.filter(e => e.diff !== Infinity).sort((a, b) => a.diff - b.diff);
+    if (!ctx.solo) { if (ranked[0]) ctx.recordStat(ranked[0].id, 'speed'); if (ranked[1]) ctx.recordStat(ranked[1].id, 'closeMiss'); }
 
     const stepScores = {};
     if (ctx.solo) {

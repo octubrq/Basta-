@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { sfx } from '../sound';
 
 export default function InstructionsPage() {
   const { user } = useAuth();
   const { instr, pauseToggle, skipRound } = useGame();
+  const remaining = instr?.remaining;
+  const paused = (instr?.pausedBy || []).length > 0;
+  useEffect(() => { if (remaining > 0 && !paused) sfx.tick(); }, [remaining, paused]);
   if (!instr) return null;
   const isAdmin = user?.role === 'admin';
   const p = instr.prueba;
   const color = p.color || '#8B5CF6';
-  const paused = (instr.pausedBy || []).length > 0;
   const scoreText = instr.solo ? (p.soloHowToScore || p.howToScore) : p.howToScore;
 
   return (
