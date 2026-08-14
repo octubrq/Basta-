@@ -66,9 +66,23 @@ function MatchConfig({ pruebas, selected, setSelected, rounds, setRounds, order,
 }
 
 // Parámetros finos de cada prueba (solo admin).
-function PruebaParams({ config, updateConfig }) {
+function PruebaParams({ config, updateConfig, resetUsed }) {
+  const avoid = config.avoidRepeats !== false;
   return (
     <div className="bg-white rounded-3xl p-5 shadow-md border-2 border-purple-100 space-y-5">
+      <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-200">
+        <h3 className="font-display font-bold text-indigo-600 mb-1">🎲 Preguntas</h3>
+        <p className="text-indigo-400 text-xs mb-2">Elige si evitar las que ya han salido (mismos amigos otro día) o dejarlas al azar (otra gente, más variedad).</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => updateConfig({ avoidRepeats: false })}
+            className={`py-2.5 px-2 rounded-xl font-bold text-sm border-2 ${!avoid ? 'bg-indigo-500 text-white border-indigo-600' : 'bg-indigo-50 text-indigo-400 border-indigo-200'}`}>🎲 Aleatorio</button>
+          <button onClick={() => updateConfig({ avoidRepeats: true })}
+            className={`py-2.5 px-2 rounded-xl font-bold text-sm border-2 ${avoid ? 'bg-indigo-500 text-white border-indigo-600' : 'bg-indigo-50 text-indigo-400 border-indigo-200'}`}>🚫 Sin repetir</button>
+        </div>
+        <button onClick={() => { if (window.confirm('¿Olvidar el historial de preguntas ya salidas?')) resetUsed(); }}
+          className="w-full mt-2 py-2 rounded-xl font-bold text-xs bg-white text-gray-400 border-2 border-gray-200">🧹 Olvidar historial</button>
+      </div>
+
       <div className="bg-pink-50 rounded-2xl p-4 border border-pink-200">
         <h3 className="font-display font-bold text-pink-600 mb-3">🎯 ¡Basta!</h3>
         <div className="space-y-3">
@@ -174,7 +188,7 @@ function SoloPasswordSetter({ isSet, setSoloPassword }) {
 
 export default function LobbyPage() {
   const { user, logout } = useAuth();
-  const { gameState, activate, deactivate, updateConfig, startMatch, setProfile, setSoloPassword } = useGame();
+  const { gameState, activate, deactivate, updateConfig, startMatch, setProfile, resetUsed, setSoloPassword } = useGame();
   const [showConfig, setShowConfig] = useState(false);
   const configRef = useRef(null);
   const toggleConfig = () => setShowConfig(v => {
@@ -262,7 +276,7 @@ export default function LobbyPage() {
           <span className="font-display font-bold text-purple-600">⚙️ Ajustes de las pruebas y contraseña de solo</span>
           <span className="text-purple-300 text-xl">{showConfig ? '△' : '▽'}</span>
         </button>
-        {showConfig && <PruebaParams config={config} updateConfig={updateConfig} />}
+        {showConfig && <PruebaParams config={config} updateConfig={updateConfig} resetUsed={resetUsed} />}
         {showConfig && <SoloPasswordSetter isSet={gameState?.soloPasswordSet} setSoloPassword={setSoloPassword} />}
       </div>
 

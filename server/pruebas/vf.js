@@ -27,7 +27,7 @@ module.exports = {
 
   async startPlay(ctx) {
     const rt = ctx.m.runtime = { items: [], idx: -1, roundScores: {}, votes: {}, order: [], revealed: false };
-    const used = db.getUsed('vf');
+    const used = ctx.game.config.avoidRepeats !== false ? db.getUsed('vf') : [];
     const avoid = used.length ? `\nMUY IMPORTANTE: NO repitas ninguna de estas afirmaciones que ya han salido: ${used.slice(0, 30).join(' | ')}. Haz otras claramente distintas.` : '';
     const text = await callClaude(
       `Genera ${N} afirmaciones curiosas de cultura general en español para un juego de Verdadero o Falso familiar. Mezcla verdaderas y falsas; que no sean ni obvias ni imposibles. Añade una explicación breve (una sola frase).${avoid} Devuelve SOLO un array JSON: [{"statement":"...","answer":true,"explanation":"..."}]`,

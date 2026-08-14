@@ -30,7 +30,7 @@ module.exports = {
 
   async startPlay(ctx) {
     const rt = ctx.m.runtime = { questions: [], qIndex: -1, answers: {}, roundScores: {}, qRevealed: -2 };
-    const used = db.getUsed('masomenos');
+    const used = ctx.game.config.avoidRepeats !== false ? db.getUsed('masomenos') : [];
     const avoid = used.length ? `\nMUY IMPORTANTE: NO repitas ninguna de estas preguntas que ya han salido: ${used.slice(0, 35).join(' | ')}. Haz preguntas claramente distintas.` : '';
     const text = await callClaude(
       `Genera ${N_QUESTIONS} preguntas de cultura general para un juego familiar en español, cada una con una respuesta que sea un NÚMERO objetivo y verificable (distancias, pesos, alturas, cantidades, años...). Variadas y curiosas, ni demasiado fáciles ni imposibles. La respuesta debe ser un número entero razonable, SIN separadores de miles.${avoid} Devuelve SOLO un array JSON: [{"q":"¿...?","answer":123,"unit":"km"}]`,

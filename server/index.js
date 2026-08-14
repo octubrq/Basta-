@@ -105,7 +105,14 @@ io.on('connection', (socket) => {
     if (cfg.cadenaLetters) c.cadenaLetters = Math.min(2, Math.max(1, cfg.cadenaLetters));
     if (cfg.handicapPercent !== undefined) c.handicapPercent = Math.min(100, Math.max(0, cfg.handicapPercent));
     if (cfg.handicapSeconds !== undefined) c.handicapSeconds = Math.min(15, Math.max(0, cfg.handicapSeconds));
+    if (cfg.avoidRepeats !== undefined) c.avoidRepeats = !!cfg.avoidRepeats;
     emitState();
+  });
+
+  socket.on('admin:reset_used', () => {
+    if (u.role !== 'admin') return;
+    require('./database').clearAllUsed();
+    socket.emit('info:message', '🧹 Historial de preguntas borrado');
   });
 
   socket.on('admin:set_profile', ({ playerId, profile } = {}) => {

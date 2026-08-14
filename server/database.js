@@ -69,8 +69,13 @@ if (!getSetting('solo_password_hash')) {
   console.log('🔑 Contraseña de solo por defecto: 1234');
 }
 
+function clearAllUsed() {
+  db.prepare("DELETE FROM settings WHERE key LIKE 'used_%'").run();
+}
+
 module.exports = db;
 module.exports.getSetting = getSetting;
 module.exports.setSetting = setSetting;
 module.exports.getUsed = getUsed;
 module.exports.pushUsed = pushUsed;
+module.exports.clearAllUsed = clearAllUsed;

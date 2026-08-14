@@ -19,7 +19,7 @@ module.exports = {
     const rt = ctx.m.runtime = { index: 0, current: null, scrambled: null, scores: {}, log: [], words: [] };
     for (const id of ctx.playerIds()) rt.scores[id] = 0;
     const wordCount = Math.max(20, minutes * 8);
-    rt.words = await generateScrambledWords(wordCount, cfg.scrambleDifficulty);
+    rt.words = await generateScrambledWords(wordCount, cfg.scrambleDifficulty, cfg.avoidRepeats !== false);
     ctx.broadcast('round:play', { prueba: 'scramble', content: { minutes } });
     const first = this.nextWord(ctx);
     if (first) ctx.broadcast('scramble:word', first);

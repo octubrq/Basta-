@@ -184,6 +184,7 @@ export function GameProvider({ children }) {
     deactivate: () => emit('admin:deactivate'),
     updateConfig: (c) => emit('admin:config', c),
     setProfile: (playerId, profile) => emit('admin:set_profile', { playerId, profile }),
+    resetUsed: () => emit('admin:reset_used'),
     setSoloPassword: (password) => emit('admin:set_solo_password', { password }),
     // partida
     startMatch: (cfg) => emit('match:start', cfg),

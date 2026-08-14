@@ -16,6 +16,7 @@ let game = {
     cadenaLetters: 1,            // 1 | 2 (Categoría en cadena: enlazar por N últimas letras)
     handicapPercent: 50,         // ventaja de puntos para niño/mayor (0-100 → x1.0-x2.0)
     handicapSeconds: 5,          // segundos extra para niño/mayor en pruebas simultáneas
+    avoidRepeats: true,          // true = no repetir preguntas ya salidas · false = aleatorio libre
   },
   match: null,          // partida en curso (la crea engine.js)
   categoryPool: { ...CATEGORY_POOL },

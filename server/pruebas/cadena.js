@@ -37,7 +37,7 @@ module.exports = {
 
   async startPlay(ctx) {
     const players = ctx.playerIds();
-    const category = await this.pickCategory();
+    const category = await this.pickCategory(ctx.game.config.avoidRepeats !== false);
     db.pushUsed('cadena', [category]);
     const rt = ctx.m.runtime = {
       category, said: [], saidNorm: new Set(),
@@ -50,8 +50,8 @@ module.exports = {
     this.startTurn(ctx);
   },
 
-  async pickCategory() {
-    const used = db.getUsed('cadena');
+  async pickCategory(avoidRepeats = true) {
+    const used = avoidRepeats ? db.getUsed('cadena') : [];
     const avoid = used.length ? ` No uses ninguna de estas que ya han salido: ${used.slice(0, 25).join(', ')}.` : '';
     const txt = await callClaude(
       `Dame UNA categoría sencilla y divertida para un juego de nombrar cosas en cadena, en español (como "Frutas", "Países", "Animales"). Debe tener muchísimos ejemplos posibles.${avoid} Responde SOLO con el nombre de la categoría, sin nada más.`,

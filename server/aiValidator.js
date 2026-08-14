@@ -125,7 +125,7 @@ const FALLBACK_WORDS = {
   extreme: ['ESTETOSCOPIO','CRISANTEMO','FERROCARRIL','CALEIDOSCOPIO','MULTIPLICACION','CONSTANTINOPLA','EXTRAORDINARIO','DESEMBOCADURA','PERPENDICULAR','TRANSFORMACION','ENCICLOPEDIA','PROCRASTINAR','DESAFORTUNADO','INCANDESCENTE','CONTEMPLACION','CIRCUMSTANCIA','PRECIPITACION','CONTRADICTORIO','DESPROPORCIONAL','INCONDICIONAL'],
 };
 
-async function generateScrambledWords(count, difficulty = 'medium') {
+async function generateScrambledWords(count, difficulty = 'medium', avoidRepeats = true) {
   const API_KEY = getApiKey();
   if (!API_KEY) {
     return (FALLBACK_WORDS[difficulty] || FALLBACK_WORDS.medium).slice(0, count);
@@ -134,7 +134,7 @@ async function generateScrambledWords(count, difficulty = 'medium') {
   const promptTemplate = DIFFICULTY_PROMPTS[difficulty] || DIFFICULTY_PROMPTS.medium;
   let prompt = promptTemplate.replace('{count}', count);
   const db = require('./database');
-  const used = db.getUsed('scramble');
+  const used = avoidRepeats ? db.getUsed('scramble') : [];
   if (used.length) prompt += `\nNo repitas ninguna de estas palabras que ya han salido: ${used.slice(0, 50).join(', ')}.`;
 
   try {
